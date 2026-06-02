@@ -27,7 +27,7 @@ description: List the proposed public Compound Writing commands.
 
 | Command | Purpose |
 | --- | --- |
-| `/trim` | Remove bloat while preserving the writer's meaning and voice. |
+| `/cut` | Remove bloat while preserving the writer's meaning and voice. |
 | `/tension` | Surface stakes, uncertainty, and reveal timing. |
 | `/momentum` | Restore forward motion where a draft stalls. |
 | `/humor` | Find suitable comic possibilities for the destination. |

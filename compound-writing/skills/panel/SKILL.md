@@ -10,7 +10,7 @@ user_invocable: true
 
 | Lens | Focus |
 | --- | --- |
-| `trim` | Economy and redundancy. |
+| `cut` | Economy and redundancy. |
 | `tension` | Stakes and uncertainty. |
 | `momentum` | Progression and stalls. |
 | `humor` | Voice-compatible comic possibility. |
@@ -25,4 +25,3 @@ user_invocable: true
 3. Run approved lenses.
 4. Synthesize consensus, useful disagreement, and prioritized revisions.
 5. Note any possible learned preference as provisional rather than saving it.
-

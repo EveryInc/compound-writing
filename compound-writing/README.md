@@ -74,7 +74,7 @@ Continue with:
 | Set up or improve your workspace | `onboarding`, `migrate-workspace`, `save`, `voice-check` |
 | Move from an idea to a developed piece | `scribe`, `panel`, `debate` |
 | Shape work for where it will appear | `longform`, `x-post`, `linkedin-post` |
-| Put a draft under editorial pressure | `trim`, `tension`, `momentum`, `humor`, `general-reader`, `stress-test`, `story-check` |
+| Put a draft under editorial pressure | `cut`, `tension`, `momentum`, `humor`, `general-reader`, `stress-test`, `story-check` |
 
 Existing drafting, editing, structural, and AI-pattern capabilities can be
 ported from the current product after their loading rules use this workspace

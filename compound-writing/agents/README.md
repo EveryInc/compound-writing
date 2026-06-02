@@ -10,7 +10,7 @@ agents/
 |-- feedback/
 |   `-- voice-matcher.md
 |-- review/
-|   |-- trim-reviewer.md
+|   |-- cut-reviewer.md
 |   |-- tension-reviewer.md
 |   |-- momentum-reviewer.md
 |   |-- humor-reviewer.md
@@ -27,7 +27,7 @@ agents/
 
 | Role | The question it asks |
 | --- | --- |
-| `trim` | What can be removed without losing meaning or voice? |
+| `cut` | What can be removed without losing meaning or voice? |
 | `tension` | Where does the reader need sharper stakes, uncertainty, or contrast? |
 | `momentum` | Where does the draft stall or repeat itself? |
 | `humor` | Where could wit, surprise, or self-awareness help without forcing a joke? |

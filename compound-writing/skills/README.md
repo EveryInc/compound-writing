@@ -13,7 +13,7 @@ Writing becomes portable.
 | Move an existing profile to the new file model | `migrate-workspace` |
 | Save or test a preference | `save`, `voice-check` |
 | Make work fit its destination | `longform`, `x-post`, `linkedin-post` |
-| Request one precise editorial lens | `trim`, `tension`, `momentum`, `humor`, `general-reader`, `stress-test`, `story-check` |
+| Request one precise editorial lens | `cut`, `tension`, `momentum`, `humor`, `general-reader`, `stress-test`, `story-check` |
 | Compare several readings of a draft | `panel`, `debate` |
 
 ## Not Yet Ported

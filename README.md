@@ -24,7 +24,7 @@ guidance later, but the core should never require it.
   provisional `context.md`.
 - Support longform, X, and LinkedIn without pretending those destinations need
   the same writing behavior.
-- Rename persona-based reviewers by their editorial job: `trim`, `tension`,
+- Rename persona-based reviewers by their editorial job: `cut`, `tension`,
   `momentum`, `humor`, `general-reader`, `stress-test`, and `story-check`.
 - Let the system propose improvements over time, while requiring approval
   before it changes durable user guidance.
