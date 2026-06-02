@@ -1,20 +1,28 @@
 # Every Editorial Edition
 
-Status: Proposed optional package boundary only. Approved editorial content
-has intentionally not been populated in this scaffold.
+This folder reserves a clean place for an optional Every-specific layer on top
+of public Compound Writing. It could eventually provide approved editorial
+guidance for an audience allowed to receive it.
 
-This edition would layer broadly usable, cleared Every editorial guidance onto
-the public `compound-writing` contract.
+Status: proposed package boundary only. It intentionally contains no editorial
+style guide, internal example, or publication workflow awaiting clearance.
+
+## Why It Is Separate
+
+The public core should teach any writer to create and own their workspace.
+Every-specific guidance has a different distribution decision and a different
+clearance burden. Keeping it in a separate package prevents publication
+material from becoming a hidden default in the public product.
 
 ## Dependency Direction
 
-- Public `compound-writing` must work independently.
-- This edition may assume the public workspace files and functional reviewer
-  names.
-- This edition must not add a personal voice, private examples, internal
-  analytics, or uncleared publication material.
+| Rule | Reason |
+| --- | --- |
+| Public `compound-writing` must work independently. | No public user should need a subscriber or internal overlay. |
+| This edition may assume the public workspace files and functional reviewer names. | An overlay can extend the shared product contract. |
+| This edition must not add personal voice, private examples, internal analytics, or uncleared publication material. | Distribution must not expose private context or turn an individual's identity into a default. |
 
-## Proposed Contents
+## What Could Eventually Live Here
 
 ```text
 every-editorial-edition/
@@ -30,6 +38,14 @@ every-editorial-edition/
     `-- clearance-checklist.md
 ```
 
-The content decision remains separate from approving the public core
-architecture.
+Examples of acceptable future material include an explicitly cleared
+publication-level checklist or a synthetic example built for this edition.
+Approval of the public core does not approve any content for this package.
 
+## Before Populating This Folder
+
+1. Define the intended audience and access model.
+2. Clear every guide, example, and workflow for that audience.
+3. Verify that no personal profile, unpublished material, analytics, or
+   private communication has been embedded.
+4. Run the [clearance checklist](release/clearance-checklist.md).

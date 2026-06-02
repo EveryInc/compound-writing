@@ -1,39 +1,60 @@
-# Proposed Repository Shape
+# Compound Writing: Externalization Proposal
 
-Status: Architecture scaffold for review, not live plugin source.
+This repository is a working proposal for making Compound Writing available
+outside its original setting. The product idea is simple: give writers useful
+AI-assisted workflows without shipping somebody else's voice, career strategy,
+or private examples as their starting point.
 
-This directory makes the proposed external Compound Writing distribution
-concrete without changing the maintained repository.
+Status: architecture scaffold for Every review, not a released plugin.
+
+## What Is Here
+
+| Package | What it would become | What reviewers can inspect now |
+| --- | --- | --- |
+| [`compound-writing/`](compound-writing/) | A portable public-core writing plugin. | Dual manifests, onboarding, blank workspace templates, synthetic example, functional review lenses, and release tests. |
+| [`every-editorial-edition/`](every-editorial-edition/) | An optional layer of approved Every editorial guidance. | A deliberately empty package boundary and clearance checklist. No editorial material has been preloaded. |
+
+The public core stands on its own. The optional Every package can add cleared
+guidance later, but the core should never require it.
+
+## The Proposal In One Minute
+
+- Replace a single catch-all writing profile with user-owned files:
+  `voice.md`, destination `style-guides/`, optional `strategy/`, and
+  provisional `context.md`.
+- Support longform, X, and LinkedIn without pretending those destinations need
+  the same writing behavior.
+- Rename persona-based reviewers by their editorial job: `trim`, `tension`,
+  `momentum`, `humor`, `general-reader`, `stress-test`, and `story-check`.
+- Let the system propose improvements over time, while requiring approval
+  before it changes durable user guidance.
+- Ship blank templates and fictional examples, not extracted personal context.
+
+## Suggested Tour
+
+For a quick review:
+
+1. Read the [public-core introduction](compound-writing/README.md).
+2. Walk through the [first-run experience](compound-writing/docs/GETTING-STARTED.md)
+   and [onboarding contract](compound-writing/docs/ONBOARDING.md).
+3. Open the [fictional researcher example](compound-writing/examples/independent-researcher/)
+   to see what a populated workspace looks like.
+4. Inspect the [workspace templates](compound-writing/defaults/workspace/)
+   and [review skills](compound-writing/skills/).
+5. Check the [release gates](compound-writing/release/) and the
+   [Every-edition boundary](every-editorial-edition/).
+
+## Repository Layout
 
 ```text
-proposed-repository/
-|-- compound-writing/          # Public core package
-`-- every-editorial-edition/   # Optional subscriber package boundary
+.
+|-- compound-writing/          # Proposed public-core plugin
+`-- every-editorial-edition/   # Optional, clearance-gated editorial layer
 ```
 
-## Package Boundary
+## What This Is Not Yet
 
-| Package | Intended use | Current scaffold content |
-| --- | --- | --- |
-| `compound-writing/` | The public, broadly adoptable writing system. | Dual manifests, newcomer documentation, generic defaults, starter workspace, synthetic example, changed skill contracts, agent map, commands, and verification plan. |
-| `every-editorial-edition/` | Optional distribution for approved subscriber-facing editorial material. | Manifest and boundary documentation only; no unapproved editorial content. |
-
-The public package retains the product name `compound-writing`. It is complete
-without installing the optional editorial edition.
-
-## Review Path
-
-1. Read `compound-writing/README.md`.
-2. Test the newcomer path in `compound-writing/docs/GETTING-STARTED.md` and
-   `compound-writing/docs/ONBOARDING.md`.
-3. Review the user file contract in `compound-writing/defaults/workspace/`.
-4. Inspect the changed skill contracts in `compound-writing/skills/`.
-5. Review the synthetic example in
-   `compound-writing/examples/independent-researcher/`.
-6. Review tests and release questions in `compound-writing/tests/` and
-   `compound-writing/release/`.
-
-## Implementation Boundary
-
-This structure is intended to be approved before changes are migrated into
-the canonical Compound Writing source repository.
+This repository does not claim that the live Compound Writing plugin has
+already migrated to this structure. It is the reviewable shape of the next
+version: the file contract, user experience, package boundary, and tests to
+approve before implementation and release.

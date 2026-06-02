@@ -1,10 +1,25 @@
 # Default User Workspace Templates
 
-This folder contains the public-safe blank artifacts Compound Writing can
-create in a new user's project. It provides guidance without supplying a
-prefabricated voice.
+These are the blank files Compound Writing can offer during setup. They are
+prompts and containers, not a prewritten personality. A new user's approved
+answers belong in their own project, never in the distributed plugin.
 
-## Files
+## A Small Useful Start
+
+Do not create every file just because it exists. For a first assignment,
+onboarding can produce:
+
+```text
+your-project/
+|-- voice.md
+`-- style-guides/
+    `-- {destination-needed-now}.md
+```
+
+Additional files become useful when the user has active work, is adapting
+across destinations, or explicitly wants strategy help.
+
+## Available Templates
 
 ```text
 user-writing-project/
@@ -19,16 +34,22 @@ user-writing-project/
     `-- platform-strategy.md
 ```
 
-## How It Works
+| Template | Use it when... | Avoid putting here... |
+| --- | --- | --- |
+| `voice.md` | A preference should travel across formats. | A rule that applies only to one platform or one draft. |
+| `style-guides/*.md` | A destination changes structure, proof, length, or tone. | General claims about the user's identity. |
+| `strategy/*.md` | The user requests public positioning or platform planning. | Assumptions inferred during basic setup. |
+| `context.md` | A current project detail or provisional lesson may help the next step. | An unapproved permanent rule. |
 
-- Begin with `voice.md` during onboarding.
-- Use only the destination guide relevant to the current assignment.
-- Introduce strategy documents when a user is choosing where to publish,
-  defining a public territory, or evaluating a cross-platform pattern.
-- Record provisional lessons in `context.md`.
-- Promote a lesson into a durable file only with the user's approval.
+## Learning Rule
 
-For the full setup behavior and file boundaries, see:
+The system may notice a pattern. It may record a provisional note in
+`context.md` or propose an edit to a durable file. It must show the proposed
+change and obtain the user's approval before updating voice, style, or
+strategy.
 
-- `../../docs/ONBOARDING.md`
-- `../../docs/WORKSPACE-FILES.md`
+Read next:
+
+- [Onboarding behavior](../../docs/ONBOARDING.md)
+- [File boundaries and precedence](../../docs/WORKSPACE-FILES.md)
+- [Fictional filled-in example](../../examples/independent-researcher/)

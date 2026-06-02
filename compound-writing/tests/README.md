@@ -1,12 +1,15 @@
 # Verification Plan
 
-The external-facing architecture needs contract tests before release:
+These are product-promise tests rather than implementation unit tests. They
+describe what a writer should be able to trust before the public core ships.
 
-- `onboarding-flow.md`: a new user can understand setup, approve files, and
-  begin real work without being pushed into unnecessary strategy setup.
-- `workspace-loading.md`: context files are loaded only when relevant.
-- `migration-contract.md`: legacy users can adopt the new structure without
-  losing material or receiving silent reclassification.
-- `improvement-loop.md`: durable learning always requires user approval.
-- `public-boundary.md`: public core contains only portable defaults and
-  synthetic or cleared examples.
+| Promise to the user | Contract to verify |
+| --- | --- |
+| "I can start without building a whole brand system." | [`onboarding-flow.md`](onboarding-flow.md): setup creates only approved, immediately useful files. |
+| "The plugin reads only what applies to this assignment." | [`workspace-loading.md`](workspace-loading.md): style and strategy context loads selectively. |
+| "My existing workspace will not be silently rearranged." | [`migration-contract.md`](migration-contract.md): legacy migration is previewed and reversible in practice. |
+| "The system cannot decide permanent preferences for me." | [`improvement-loop.md`](improvement-loop.md): durable learning always needs approval. |
+| "The shipped defaults do not contain someone else's personal context." | [`public-boundary.md`](public-boundary.md): templates are portable and examples are synthetic or cleared. |
+
+Release testing should exercise these promises with a fresh user project, a
+legacy project, and an attempted unapproved update.
