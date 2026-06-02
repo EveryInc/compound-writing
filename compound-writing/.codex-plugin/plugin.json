@@ -1,0 +1,40 @@
+{
+  "name": "compound-writing",
+  "version": "2.0.0",
+  "description": "A writing system that helps users define a voice, adapt it by destination, and improve guidance with approval.",
+  "author": {
+    "name": "Every",
+    "url": "https://every.to"
+  },
+  "homepage": "https://github.com/EveryInc/compound-writing",
+  "repository": "https://github.com/EveryInc/compound-writing",
+  "keywords": [
+    "writing",
+    "editing",
+    "voice",
+    "linkedin",
+    "x",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Compound Writing",
+    "shortDescription": "Voice, strategy, and writing workflows",
+    "longDescription": "Compound Writing helps users move from ideas to publishable work across longform, X, and LinkedIn. It keeps voice, destination style, and public-positioning strategy in user-owned files, then proposes improvements for approval as patterns emerge.",
+    "developerName": "Every",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/EveryInc/compound-writing",
+    "defaultPrompt": [
+      "Set up my writing workspace and voice.",
+      "Help me develop this idea into the right destination.",
+      "Review this draft against my voice.md."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}

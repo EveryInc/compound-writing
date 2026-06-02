@@ -1,0 +1,17 @@
+{
+  "name": "compound-writing",
+  "version": "2.0.0",
+  "description": "A writing system that helps users define a voice, adapt it by destination, and improve guidance with approval.",
+  "author": {
+    "name": "Every"
+  },
+  "keywords": [
+    "writing",
+    "editing",
+    "voice",
+    "linkedin",
+    "x",
+    "workflow"
+  ],
+  "repository": "https://github.com/EveryInc/compound-writing"
+}
