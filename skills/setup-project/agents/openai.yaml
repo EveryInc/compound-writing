@@ -1,0 +1,4 @@
+interface:
+  display_name: "Set Up Writing Project"
+  short_description: "Create a complete writing project folder"
+  default_prompt: "Use $setup-project to create a new self-contained writing project."

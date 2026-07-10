@@ -1,0 +1,46 @@
+{
+  "name": "compound-writing",
+  "version": "2.2.0+codex.20260710184242",
+  "description": "A context-first writing toolbox for project setup, idea development, drafting, revision, stress-testing, and publication preparation that preserves voice, judgment, and source provenance.",
+  "author": {
+    "name": "Katie Parrott",
+    "email": "katie@every.to",
+    "url": "https://github.com/EveryInc"
+  },
+  "homepage": "https://github.com/EveryInc/compound-writing",
+  "repository": "https://github.com/EveryInc/compound-writing",
+  "license": "MIT",
+  "keywords": [
+    "writing",
+    "editing",
+    "compound-writing",
+    "agent-native",
+    "ai-native-writing",
+    "style-guide",
+    "voice",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Compound Writing",
+    "shortDescription": "A full writing toolbox with a context-aware front door",
+    "longDescription": "Compound Writing provides a full toolbox for setting up a portable writing project, developing ideas, drafting, revising, pressure-testing, and preparing work for publication. Scribe acts as the context-aware front door, choosing the smallest useful workflow while every specialist tool remains available for direct use. The system preserves source provenance, writer voice, and human ownership of consequential decisions.",
+    "developerName": "Katie Parrott",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/EveryInc/compound-writing",
+    "privacyPolicyURL": "https://github.com/EveryInc/compound-writing",
+    "termsOfServiceURL": "https://github.com/EveryInc/compound-writing",
+    "defaultPrompt": [
+      "Set up a new self-contained writing project.",
+      "Help me develop this idea into a strong piece.",
+      "Help me choose the right tool for this draft."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
