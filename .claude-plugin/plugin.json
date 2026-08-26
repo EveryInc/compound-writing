@@ -1,7 +1,7 @@
 {
   "name": "compound-writing",
-  "version": "2.2.0",
-  "description": "A context-first writing toolbox for project setup, idea development, drafting, revision, stress-testing, and publication preparation that preserves voice, judgment, and source provenance.",
+  "version": "2.3.0",
+  "description": "A context-first writing toolbox with one durable writing home for voice, style, examples, drafts, revision, stress-testing, and publication preparation.",
   "author": {
     "name": "Katie Parrott",
     "email": "katie@every.to"

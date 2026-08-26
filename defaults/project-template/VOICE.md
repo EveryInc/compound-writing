@@ -17,7 +17,7 @@ Start with the sections you can answer now. Add rules only when they are specifi
 ## Scope
 
 - **Writer or voice:** [Name]
-- **Applies to:** [This project, publication, or format]
+- **Applies to:** [Your writing generally, a publication, or a format]
 - **More specific voice files:** [List any assignment-level overrides]
 
 When a more specific voice instruction conflicts with this file, follow the more specific rule for that assignment.

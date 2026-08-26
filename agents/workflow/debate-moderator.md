@@ -1,6 +1,6 @@
 ---
 name: debate-moderator
-description: "Orchestrates multi-round deliberation between reviewer agents. Identifies tensions from initial reviews, sends challenges to involved reviewers, tracks concessions and holdouts, produces final synthesis with resolution status. Used internally by /debate."
+description: "Orchestrates multi-round deliberation between reviewer agents. Identifies tensions from initial reviews, sends challenges to involved reviewers, tracks concessions and holdouts, produces final synthesis with resolution status. Used internally by /cw-debate."
 model: inherit
 ---
 
