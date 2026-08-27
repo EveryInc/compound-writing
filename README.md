@@ -165,9 +165,26 @@ Public releases are built from an explicit generic-skill allowlist. Internal or 
 
 ## Installation
 
-The repository root is the installable plugin. Clone it locally, then point the local-plugin or marketplace configuration for your runtime at that folder.
+### Claude Code
 
-For Codex, [codex-marketplace.example.json](codex-marketplace.example.json) shows the expected local marketplace entry. For Claude, use the manifest in `.claude-plugin/`. Start a new session after installing so the toolbox and its skills are loaded.
+The published repository is a Claude Code plugin marketplace. From any Claude Code session:
+
+```
+/plugin marketplace add EveryInc/compound-writing
+/plugin install compound-writing@compound-writing
+```
+
+Start a new session after installing so the toolbox and its skills are loaded. Run `/cw-help` to orient, or `/cw-scribe` to begin writing.
+
+To update later, run `/plugin update compound-writing@compound-writing`.
+
+### Codex
+
+The repository root is the installable plugin. Clone it locally, then point your Codex marketplace configuration at that folder; [codex-marketplace.example.json](codex-marketplace.example.json) shows the expected entry.
+
+### From a local checkout
+
+Clone the repository, then add the checkout folder as a local-directory marketplace for your runtime. For Claude, `claude plugin marketplace add /path/to/compound-writing` followed by `claude plugin install compound-writing@compound-writing`.
 
 The public repository contains only the generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are maintained separately.
 

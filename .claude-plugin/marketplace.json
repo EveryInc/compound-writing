@@ -1,5 +1,5 @@
 {
-  "name": "compound-writing-local",
+  "name": "compound-writing",
   "owner": {
     "name": "Katie Parrott",
     "url": "https://github.com/EveryInc"
@@ -17,7 +17,12 @@
         "name": "Katie Parrott",
         "email": "katie@every.to"
       },
-      "tags": ["writing", "editing", "agent-native", "ai-native-writing"],
+      "tags": [
+        "writing",
+        "editing",
+        "agent-native",
+        "ai-native-writing"
+      ],
       "source": "./"
     }
   ]
