@@ -1,0 +1,4 @@
+interface:
+  display_name: "Set Up Writing Home"
+  short_description: "Create a portable writing home safely"
+  default_prompt: "Use $setup-project to create a portable writing home without overwriting existing files."

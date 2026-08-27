@@ -1,0 +1,4 @@
+interface:
+  display_name: "BLUF"
+  short_description: "Find buried and misplaced ledes"
+  default_prompt: "Use $bluf to check whether the most important idea appears where it belongs."

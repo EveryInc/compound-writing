@@ -1,23 +1,28 @@
 {
-  "name": "compound-writing-local",
+  "name": "compound-writing",
   "owner": {
     "name": "Katie Parrott",
     "url": "https://github.com/EveryInc"
   },
   "metadata": {
-    "description": "A full, context-first toolbox for project setup, drafting, revision, voice, and publication readiness.",
-    "version": "2.2.0"
+    "description": "A full, context-first toolbox with one durable writing home for voice, style, drafts, revision, and publication readiness.",
+    "version": "2.3.0"
   },
   "plugins": [
     {
       "name": "compound-writing",
-      "description": "A full, context-first toolbox for project setup, drafting, revision, voice, and publication readiness.",
-      "version": "2.2.0",
+      "description": "A full, context-first toolbox with one durable writing home for voice, style, drafts, revision, and publication readiness.",
+      "version": "2.3.0",
       "author": {
         "name": "Katie Parrott",
         "email": "katie@every.to"
       },
-      "tags": ["writing", "editing", "agent-native", "ai-native-writing"],
+      "tags": [
+        "writing",
+        "editing",
+        "agent-native",
+        "ai-native-writing"
+      ],
       "source": "./"
     }
   ]

@@ -1,6 +1,6 @@
 # STYLE.md
 
-Use this file to define what an article in this project must do, contain, and prove. `STYLE.md` contains substantive rules for argument, evidence, article structure, and publication readiness.
+Use this file to define what your writing must do, contain, and prove. `STYLE.md` contains substantive rules for argument, evidence, article structure, and publication readiness.
 
 ## What belongs here
 
@@ -13,14 +13,14 @@ Do not put word choice, sentence construction, cadence, punctuation, verbal tics
 
 Classification test: if a rule changes the claim, support, organization, or readiness standard of the article, it belongs here. If it changes wording, sentence construction, or tone, it belongs in `VOICE.md`. Split mixed feedback into separate rules.
 
-Start with the project's promise, audience, thematic territory, and one reliable structure. Let the guide grow from real work.
+Start with your reader promise, audience, thematic territory, and one reliable structure. Let the guide grow from real work.
 
-## Project identity
+## Writing identity
 
-- **Project or publication:** [Name]
+- **Body of work or publication:** [Name, if there is one]
 - **What it is:** [One-sentence definition]
 - **What it is for:** [The need it serves or problem it solves]
-- **What makes it distinct:** [Why this project deserves to exist]
+- **What makes it distinct:** [Why this writing deserves to exist]
 
 ## Audience
 
@@ -42,7 +42,7 @@ Every piece should give the reader:
 
 ### Recurring themes
 
-- [Theme or question the project returns to]
+- [Theme or question the writing returns to]
 - [Theme]
 
 ### Productive tensions
@@ -53,19 +53,19 @@ Every piece should give the reader:
 ### Outside the territory
 
 - [Topics or angles that belong elsewhere]
-- [Subjects that require a different project or format]
+- [Subjects that require a different format or context]
 
 ## Intellectual posture
 
 - **Claims:** [How bold, qualified, or provisional claims should be]
-- **Complexity:** [How the project handles uncertainty and contradiction]
+- **Complexity:** [How the writing handles uncertainty and contradiction]
 - **Counterarguments:** [Whether and how to surface them]
 - **Originality:** [What counts as a sufficiently new contribution]
 - **Usefulness:** [What practical or conceptual payoff a piece should provide]
 
 ## Evidence and provenance
 
-- [What kinds of evidence the project expects]
+- [What kinds of evidence the writing expects]
 - [Standards for links, citations, screenshots, examples, or data]
 - [How to distinguish reported fact, personal experience, and inference]
 - [Claims that require extra verification]
@@ -94,7 +94,7 @@ Treat structures as useful shapes, not compulsory formulas.
 
 ## Openings
 
-Strong openings in this project tend to:
+Strong openings tend to:
 
 - [Establish a particular kind of tension, scene, claim, or need]
 - [Clarify stakes by a specific point]
@@ -132,20 +132,20 @@ Avoid:
 |---|---|---|---|
 | [Name] | [Reader or argumentative job] | [Conditions] | [How it becomes formulaic] |
 
-## Project anti-patterns
+## Writing anti-patterns
 
 | Pattern | Why it does not belong | Better move |
 |---|---|---|
-| [Pattern] | [Consequence for this project] | [Revision principle] |
+| [Pattern] | [Consequence for the writing] | [Revision principle] |
 
 ## Positive examples
 
-Keep full exemplars in `examples/`. Use this section to link each example to the project-level rule it demonstrates.
+Keep full exemplars in `examples/`. Use this section to link each example to the substantive rule it demonstrates.
 
 ### [Example title]
 
 - **Source:** [File in `examples/` or link]
-- **What it demonstrates:** [Specific project-level principle]
+- **What it demonstrates:** [Specific substantive principle]
 - **What not to imitate mechanically:** [Surface feature that is not the rule]
 
 ## Negative examples
@@ -154,7 +154,7 @@ Keep full exemplars in `examples/`. Use this section to link each example to the
 
 - **Source:** [File in `examples/` or link]
 - **What fails:** [Diagnosis]
-- **Why it conflicts with this project:** [Consequence]
+- **Why it conflicts with this writing:** [Consequence]
 - **Preferred direction:** [Revision principle]
 
 ## Publication readiness
@@ -176,4 +176,4 @@ Define the substantive threshold for calling a piece ready. Include unresolved a
 
 Add durable lessons supported by repeated publication results, editorial feedback, or explicit project decisions. Revise or remove rules that become too rigid.
 
-- [Date or piece]: [Confirmed lesson and why it belongs at project level]
+- [Date or piece]: [Confirmed lesson and why it belongs in this durable guide]

@@ -1,6 +1,6 @@
 ---
 name: panel-synthesizer
-description: "Synthesizes outputs from multiple reviewer agents into a unified analysis. Identifies consensus findings, productive tensions, and unique insights. Parses prose outputs—no structured format required from reviewers. Used internally by /panel."
+description: "Synthesizes outputs from multiple reviewer agents into a unified analysis. Identifies consensus findings, productive tensions, and unique insights. Parses prose outputs—no structured format required from reviewers. Used internally by /cw-panel."
 model: inherit
 ---
 
