@@ -99,7 +99,7 @@ Compound learning means updating a maintained context surface, not claiming priv
 - `skills/` is canonical across Claude and Codex.
 - `.codex-plugin/plugin.json` packages the shared skills for Codex.
 - `.claude-plugin/` and `agents/` provide Claude compatibility and optional subagent execution.
-- `commands/` is a compatibility/help surface, not a second implementation of the skills. An alias such as `cw-compound` routes to its skill and adds no behavior.
+- `commands/` is a compatibility/help surface, not a second implementation of the skills. An alias such as `cw-compound` routes to its skill and adds no behavior; commands reach Claude Code only, since the Codex manifest packages `skills/`.
 - The packs resolver has one canonical copy, `skills/cw-packs/scripts/packs-resolve.py`; other skills reference it by plugin-relative path rather than carrying copies.
 - Public releases are assembled from an explicit allowlist containing the full generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
 - Runtime cache or installed plugin folders are derived copies, never source of truth.

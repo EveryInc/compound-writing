@@ -95,7 +95,7 @@ It is a map, not a gate.
 | `cw-setup-project` | Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`. |
 | `cw-onboarding` | Begin or refresh the writing home's voice and style rules. |
 | `cw-scribe` | Choose and compose the smallest useful workflow for an open-ended request. |
-| `cw-save` | Turn a confirmed preference or lesson into durable project context or a declared pack. `cw-compound` is a compatibility alias. |
+| `cw-save` | Turn a confirmed preference or lesson into durable project context or a declared pack. `cw-compound` is a Claude Code compatibility alias; Codex packages skills only. |
 | `cw-packs` | Declare, scaffold, and check the Compound Packs a writing home loads. |
 
 ### Develop The Idea

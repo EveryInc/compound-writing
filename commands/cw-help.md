@@ -39,6 +39,6 @@ cw-brainstorm -> cw-interview -> cw-outline -> cw-draft -> cw-dev-edit -> cw-lin
 
 Publication, workspace, and format standards come from the active `STYLE.md`, brief, template, or maintained workflow, or from a declared Compound Pack when they are shared beyond one home.
 
-Use `cw-save` to turn a confirmed preference or recurring lesson into maintained context; `cw-compound` is the same command under Compound Engineering's name. Use `cw-packs` to declare, scaffold, or check the Compound Packs a writing home loads; every step cites the pack rules it applies as `(pack: <id>, <file>)`.
+Use `cw-save` to turn a confirmed preference or recurring lesson into maintained context; on Claude Code, `cw-compound` is the same command under Compound Engineering's name. Use `cw-packs` to declare, scaffold, or check the Compound Packs a writing home loads; every step cites the pack rules it applies as `(pack: <id>, <file>)`.
 
 Ask "Show me the Compound Writing toolbox" for the complete tool catalog and one-line descriptions.
