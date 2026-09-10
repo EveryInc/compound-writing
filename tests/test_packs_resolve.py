@@ -614,5 +614,30 @@ class HardeningTests(ResolverHarness):
         self.assertIn("config.yaml:4", result["errors"][0])
         self.assertIn("outside the `packs:` block", result["errors"][0])
 
+    def test_checkout_nested_inside_a_home_does_not_hide_the_home(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        book = self.home / "drafts" / "book"
+        (book / "ch").mkdir(parents=True)
+        (book / ".git").mkdir()
+        result = self.run_resolver(cwd=book / "ch")
+        self.assertEqual(result["home"], str(self.home.resolve()))
+        self.assertEqual([r["id"] for r in result["roots"]], ["house-style"])
+
+    def test_nested_checkout_with_its_own_config_overrides_the_home(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        book = self.home / "drafts" / "book"
+        (book / ".git").mkdir(parents=True)
+        (book / ".compound-writing").mkdir()
+        (book / ".compound-writing" / "config.yaml").write_text("packs:\n  - source: rules\n", encoding="utf-8")
+        (book / "rules").mkdir()
+        (book / "rules" / "r.md").write_text(RULE.format(title="Book rule"), encoding="utf-8")
+        result = self.run_resolver(cwd=book)
+        self.assertEqual(result["home"], str(book.resolve()))
+        self.assertEqual([r["id"] for r in result["roots"]], ["rules"])
+
+
+
 if __name__ == "__main__":
     unittest.main()

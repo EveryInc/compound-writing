@@ -10,13 +10,14 @@ source publishes, applies selection, and prints one JSON object to stdout:
      "warnings": [...], "errors": [...], "entries": <number of parsed entries>,
      "home": "/abs/path/to/writing-home" | null}
 
-`<home>` is found the way git finds a repository: walk up from a start path --
-`--home <file-or-dir>`, otherwise the working directory -- and stop at the
-first directory that contains `.compound-writing/`, or, failing that, at the
-first that contains `.git` (the checkout's top level). The walk never crosses a
-filesystem boundary or a GIT_CEILING_DIRECTORIES entry, and on POSIX a
-candidate directory this user does not own is skipped with a warning. Without
-a qualifying directory there is no config to read and the result is empty.
+`<home>` is the nearest directory at or above a start path -- `--home
+<file-or-dir>`, otherwise the working directory -- that contains
+`.compound-writing/`. When none does, the innermost checkout (the first
+directory seen containing `.git`) is the home. The walk never crosses a
+filesystem boundary or a GIT_CEILING_DIRECTORIES entry, does not consult git
+configuration, and on POSIX skips a candidate directory this user does not own
+with a warning. Without a qualifying directory there is no config to read and
+the result is empty.
 
 `nested_rule_shaped` counts the rule-shaped `.md` files one level below the
 pack's top level. Discovery never reads them (subdirectories are storage), so
@@ -753,37 +754,41 @@ def _same_device(a: str, b: str) -> bool:
 
 
 def _home_root(start: str, warnings: list) -> str | None:
-    """The writing home that governs `start`, found the way git finds a
-    repository: walk up from `start` (a file means its directory) and stop at
-    the first directory that holds `.compound-writing/`, or, failing that, at
-    the first that holds `.git` (the checkout's top level). Never climb across a
-    filesystem boundary or into a GIT_CEILING_DIRECTORIES entry. A candidate
-    directory this user does not own is skipped with a warning (POSIX), so a
-    foreign `.compound-writing/` planted above the working tree cannot steer
-    the run; an unowned checkout ends the search instead of becoming the home.
-    None when nothing qualifies."""
+    """The writing home that governs `start`: the nearest directory at or above
+    `start` (a file means its directory) that holds `.compound-writing/`. When
+    no directory on the way up holds one, the innermost checkout (the first
+    directory seen holding `.git`) is the home, so a plain repository reads its
+    root config. A checkout nested inside a writing home therefore does not hide
+    the home; a `.compound-writing/` inside the checkout overrides it.
+
+    The walk never climbs across a filesystem boundary or into a
+    GIT_CEILING_DIRECTORIES entry, and it does not consult git configuration
+    (`GIT_DIR`, `safe.directory`, `GIT_DISCOVERY_ACROSS_FILESYSTEM`). A
+    candidate directory this user does not own is skipped with a warning
+    (POSIX), so a foreign `.compound-writing/` planted above the working tree
+    cannot steer the run and an unowned checkout never becomes the home. None
+    when nothing qualifies."""
     current = os.path.realpath(os.path.expanduser(start))
     if not os.path.isdir(current):
         current = os.path.dirname(current)
     if not os.path.isdir(current):
         return None
     ceilings = _ceilings()
+    checkout = None
     while True:
         owned = IS_WINDOWS or _owned_dir(current)
-        has_config = os.path.isdir(os.path.join(current, CONFIG_DIR))
-        has_git = os.path.lexists(os.path.join(current, ".git"))
-        if has_config and owned:
-            return current
-        if has_config:
-            warnings.append(f"skipped `{CONFIG_DIR}/` in {current}: directory not owned by this user")
-        if has_git:
+        if os.path.isdir(os.path.join(current, CONFIG_DIR)):
             if owned:
                 return current
-            warnings.append(f"stopped at {current}: checkout not owned by this user")
-            return None
+            warnings.append(f"skipped `{CONFIG_DIR}/` in {current}: directory not owned by this user")
+        if checkout is None and os.path.lexists(os.path.join(current, ".git")):
+            if owned:
+                checkout = current
+            else:
+                warnings.append(f"skipped checkout {current}: directory not owned by this user")
         parent = os.path.dirname(current)
         if parent == current or parent in ceilings or not _same_device(parent, current):
-            return None
+            return checkout
         current = parent
 
 
