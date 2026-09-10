@@ -16,11 +16,12 @@ Use this authority order for voice work:
 1. Explicit instructions for the current passage.
 2. The active writer and project `VOICE.md` files.
 3. Project, publication, column, or platform `STYLE.md` and more specific guides.
-4. Relevant curated examples from the active project's `examples/` folder.
-5. Legacy `TASTE.md`, only when the project still maintains it.
-6. Plugin defaults only for unresolved gaps.
+4. Declared Compound Pack rules whose `applies_when` matches voice work, per the contract's Compound Packs section.
+5. Relevant curated examples from the active project's `examples/` folder.
+6. Legacy `TASTE.md`, only when the project still maintains it.
+7. Plugin defaults only for unresolved gaps.
 
-Name the sources used in the assessment. Do not treat plugin defaults as the writer's identity.
+Name the sources used in the assessment, pack rules included as `(pack: <id>, <file>)`. A passage that contradicts a matching pack rule is drift, reported with that citation. Do not treat plugin defaults as the writer's identity.
 
 ## Diagnose
 

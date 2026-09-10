@@ -56,7 +56,7 @@ Treat it as a map, not a gate. Skip resolved stages and jump backward when the m
 
 1. Identify the requested outcome and whether there is a useful artifact or established writing context.
 2. Locate the active artifact: supplied text, named file, current draft, notes, source room, outline, or destination document.
-3. Load the relevant voice, workspace, assignment, and source context.
+3. Load the relevant voice, workspace, assignment, and source context. Resolve the writing home's declared Compound Packs once here, with the resolver and rules in the context contract, and carry the resolved roots into every step you compose so no later skill resolves them again. With no `packs:` declared, skip this silently.
 4. Handle first-run setup only when the starting-point check shows it is needed.
 5. State the route briefly when it includes several meaningful passes.
 6. Begin. Ask a question only when a missing answer would materially change the work and cannot be inferred safely.
@@ -96,4 +96,5 @@ Finish the requested outcome instead of automatically pushing the user into the 
 
 - what changed or was produced;
 - any source, thesis, or editorial uncertainty that still needs judgment;
-- any recurring preference or failure pattern worth capturing through `cw-save`.
+- any recurring preference or failure pattern worth capturing through `cw-save`;
+- any pack resolution error or warning, once, with the pack rules that shaped the work cited `(pack: <id>, <file>)`.

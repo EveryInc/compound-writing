@@ -26,6 +26,8 @@ Read `../../references/context-contract.md`, the draft, and any available brief,
 
 Infer missing context from the draft and request. Do not require `.status.yaml`.
 
+Match the declared Compound Pack rules against this review per the contract's Compound Packs section. Pass the matching rules to every reviewer as criteria alongside the draft, and to the synthesizer, so a finding a rule drives is attributed `(pack: <id>, <file>)` in the synthesis. Rules that describe a reader or reviewer shape how the panel reads; they do not add or replace panel members.
+
 ### 2. Propose Panel
 
 Based on piece context, propose 4-6 reviewers.

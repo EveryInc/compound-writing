@@ -52,6 +52,8 @@ Run `cw-ai-check` in its required order. When source material or earlier human d
 ### Voice Alignment
 Check the prose against the active writer and project voice sources. Do not make a sentence cleaner by erasing intent, humor, rhythm, priors, or a distinctive aside.
 
+Revise against the declared Compound Pack rules whose `applies_when` matches sentence-level work, per the contract's Compound Packs section. In the summary of changes, cite the rule behind a change it drove `(pack: <id>, <file>)`; the home's own `VOICE.md` wins on a direct conflict, and you name the conflict.
+
 ### Meaning And Provenance
 - Preserve the scope and certainty of factual claims.
 - Do not sever citations or source attribution from the claims they support.
