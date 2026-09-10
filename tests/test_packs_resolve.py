@@ -505,6 +505,107 @@ class GitSourceTests(ResolverHarness):
         self.assertEqual(result["roots"], [])
         self.assertTrue(any("pack `voice` not published" in e and "leak.md" in e for e in result["errors"]))
 
+    def test_sha_ref_resolves_through_the_fetch_fallback(self) -> None:
+        sha = self.git(self.remote, "rev-parse", "HEAD")
+        self.config(f"packs:\n  - source: {self.url}\n    ref: {sha}\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["rails"])
+        self.assertEqual(result["roots"][0]["ref"], sha)
+
+    def test_branch_ref_stays_at_its_cached_resolution(self) -> None:
+        branch = self.git(self.remote, "branch", "--show-current")
+        self.config(f"packs:\n  - source: {self.url}\n    ref: {branch}\n")
+        self.assertEqual([r["id"] for r in self.run_resolver()["roots"]], ["rails"])
+        (self.remote / "later").mkdir()
+        (self.remote / "later" / "rule.md").write_text(RULE.format(title="Later rule"), encoding="utf-8")
+        self.git(self.remote, "add", "-A")
+        self.git(self.remote, "commit", "-q", "-m", "later")
+        self.assertEqual([r["id"] for r in self.run_resolver()["roots"]], ["rails"])
+
+    def test_partial_cache_directory_is_treated_as_a_miss(self) -> None:
+        (self.cache / "deadbeef.part-xyz").mkdir(parents=True)
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n")
+        self.assertEqual([r["id"] for r in self.run_resolver()["roots"]], ["rails"])
+
+    def test_single_pack_git_source_takes_its_url_tail_as_id(self) -> None:
+        repo = self.make_pack_repo("housestyle", {"": ["Root rule"]})
+        self.config(f"packs:\n  - source: {self.file_url(repo)}\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["housestyle"])
+
+    def test_id_override_keeps_git_metadata(self) -> None:
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n    pack: rails\n    id: team-rails\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["team-rails"])
+        self.assertEqual(result["roots"][0]["ref"], "v1.0.0")
+        self.assertEqual(result["roots"][0]["url"], self.url)
+
+    def test_block_style_pack_list_installs_exactly_those(self) -> None:
+        repo = self.make_pack_repo("three", {"rails": ["A"], "inertia": ["B"], "extra": ["C"]})
+        self.config(f"packs:\n  - source: {self.file_url(repo)}\n    ref: v1\n    pack:\n      - rails\n      - extra\n")
+        result = self.run_resolver()
+        self.assertEqual(sorted(r["id"] for r in result["roots"]), ["extra", "rails"])
+
+    def test_non_string_path_errors_for_that_entry_only(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n    path: [a, b]\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["house-style"])
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertIn("config.yaml:2", result["errors"][0])
+        self.assertIn("`path:` must be a single string", result["errors"][0])
+
+    def test_layers_concatenate_git_then_path(self) -> None:
+        self.pack("personal/kk-style", "Kk style")
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n")
+        self.config("packs:\n  - source: personal/kk-style\n", name="config.local.yaml")
+        result = self.run_resolver()
+        self.assertEqual(sorted(r["id"] for r in result["roots"]), ["kk-style", "rails"])
+
+    @unittest.skipIf(os.name == "nt", "symlinks need privileges on Windows")
+    def test_child_directory_linking_outside_is_skipped_with_one_warning(self) -> None:
+        outside = self.tmp / "outside" / "leak"
+        outside.mkdir(parents=True)
+        (outside / "l.md").write_text(RULE.format(title="Leaked"), encoding="utf-8")
+        repo = self.make_pack_repo("linkout", {"honest": ["Honest rule"]})
+        os.symlink(outside, repo / "leak")
+        self.recommit(repo, "link out")
+        self.config(f"packs:\n  - source: {self.file_url(repo)}\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["honest"])
+        self.assertEqual(result["errors"], [])
+        self.assertEqual(len(result["warnings"]), 1)
+        self.assertIn("`leak`", result["warnings"][0])
+        self.assertIn("outside the source", result["warnings"][0])
+
+    @unittest.skipIf(os.name == "nt", "symlinks need privileges on Windows")
+    def test_nested_link_out_refuses_that_pack_and_siblings_publish(self) -> None:
+        outside = self.tmp / "outside-nested"
+        outside.mkdir()
+        (outside / "keys.md").write_text("not a rule, still readable\n", encoding="utf-8")
+        repo = self.make_pack_repo("nestedlink", {"honest": ["Honest rule"], "clean": ["Clean rule"]})
+        (repo / "honest" / "resources").mkdir()
+        os.symlink(outside / "keys.md", repo / "honest" / "resources" / "keys.md")
+        self.recommit(repo, "nested link out")
+        self.config(f"packs:\n  - source: {self.file_url(repo)}\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["clean"])
+        self.assertEqual(result["warnings"], [])
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertIn("pack `honest` not published", result["errors"][0])
+        self.assertIn("`resources/keys.md`", result["errors"][0])
+
+    @unittest.skipIf(os.name == "nt", "symlinks need privileges on Windows")
+    def test_symlink_staying_inside_the_checkout_is_ordinary_content(self) -> None:
+        repo = self.make_pack_repo("alias", {"honest": ["Honest rule"]})
+        os.symlink("honest", repo / "alias")
+        self.recommit(repo, "alias")
+        self.config(f"packs:\n  - source: {self.file_url(repo)}\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual(sorted(r["id"] for r in result["roots"]), ["alias", "honest"])
+        self.assertEqual(result["warnings"], [])
+
+
 class HardeningTests(ResolverHarness):
     """Regressions from the pack-resolution test matrix on PR #3."""
 
@@ -637,6 +738,122 @@ class HardeningTests(ResolverHarness):
         self.assertEqual(result["home"], str(book.resolve()))
         self.assertEqual([r["id"] for r in result["roots"]], ["rules"])
 
+
+class PortedCeTests(ResolverHarness):
+    """Cases carried over from compound-engineering-plugin's resolver suite."""
+
+    def test_unexpected_exception_in_one_entry_is_that_entrys_error(self) -> None:
+        self.pack("packs/good", "Good rule")
+        self.config("packs:\n  - source: packs/boom\n  - source: packs/good\n")
+        proc = self.run_probe(
+            "import sys\n"
+            "real = m.resolve_entry\n"
+            "def flaky(entry, *a, **kw):\n"
+            "    if str(entry.get('source', '')).endswith('/boom'):\n"
+            "        raise RuntimeError('kaboom')\n"
+            "    return real(entry, *a, **kw)\n"
+            "m.resolve_entry = flaky\n"
+            "sys.exit(m.main())\n"
+        )
+        result = self.parse_output(proc)
+        self.assertEqual([r["id"] for r in result["roots"]], ["good"])
+        self.assertEqual(result["errors"], ["config.yaml:2: unexpected error resolving entry: kaboom"])
+
+    def test_bom_rule_and_long_frontmatter_publish_without_a_skip_warning(self) -> None:
+        pack = self.home / "rules"
+        pack.mkdir()
+        (pack / "bom.md").write_text("\ufeff" + RULE.format(title="Bom rule"), encoding="utf-8")
+        tags = "\n".join(f"  - tag-{i}-{'x' * 8}" for i in range(600))
+        long_rule = f"---\ntitle: long rule\ntags:\n{tags}\napplies_when:\n  - always\n---\n\nRule body.\n"
+        self.assertGreater(len(long_rule.encode()), 4096)
+        (pack / "long.md").write_text(long_rule, encoding="utf-8")
+        self.config("packs:\n  - source: rules\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["rules"])
+        self.assertEqual(result["warnings"], [])
+
+    def test_readme_with_frontmatter_is_never_a_rule(self) -> None:
+        self.pack("design", "Spacing rule")
+        (self.home / "design" / "README.md").write_text(RULE.format(title="About this pack"), encoding="utf-8")
+        (self.home / "only-readme").mkdir()
+        (self.home / "only-readme" / "ReadMe.md").write_text(RULE.format(title="About this pack"), encoding="utf-8")
+        self.config("packs:\n  - source: design\n  - source: only-readme\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["design"])
+        self.assertEqual(result["errors"], [])
+        self.assertEqual(len(result["warnings"]), 1)
+        self.assertIn("`only-readme` publishes no packs", result["warnings"][0])
+        self.assertNotIn("skipped pack file", " ".join(result["warnings"]))
+
+    def test_nested_count_scans_one_level_and_skips_readme_and_hidden(self) -> None:
+        pack = self.pack("house-rules", "Top rule", readme=False)
+        for relative in ("research/obs-001.md", "research/README.md", "research/deeper/obs-002.md", ".hidden/obs-003.md"):
+            target = pack / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(RULE.format(title=relative), encoding="utf-8")
+        self.config("packs:\n  - source: house-rules\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"][0]["nested_rule_shaped"], 1)
+        self.assertEqual(result["warnings"], [])
+
+    def test_lowercase_readme_without_frontmatter_is_not_a_skipped_file(self) -> None:
+        pack = self.pack("lower", "Rule", readme=False)
+        (pack / "readme.md").write_text("lowercase readme\n", encoding="utf-8")
+        self.config("packs:\n  - source: lower\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["lower"])
+        self.assertEqual(result["warnings"], [])
+
+    def test_without_a_git_binary_path_sources_resolve_and_git_sources_warn(self) -> None:
+        self.pack("personal/kk-style", "Kk style")
+        self.config("packs:\n  - source: personal/kk-style\n  - source: https://github.com/o/r\n    ref: v1\n")
+        empty_path = self.tmp / "empty-path"
+        empty_path.mkdir()
+        result = self.run_resolver(cwd=self.home / ".compound-writing", env_extra={"PATH": str(empty_path)})
+        self.assertEqual([r["id"] for r in result["roots"]], ["kk-style"])
+        self.assertEqual(result["errors"], [])
+        self.assertEqual(len(result["warnings"]), 1)
+        self.assertIn("git binary not found", result["warnings"][0])
+
+    def test_tilde_source_expands_against_home(self) -> None:
+        fake_home = self.tmp / "user-home"
+        (fake_home / "packs" / "kk").mkdir(parents=True)
+        (fake_home / "packs" / "kk" / "k.md").write_text(RULE.format(title="Kk rule"), encoding="utf-8")
+        self.config("packs:\n  - source: ~/packs/kk\n")
+        result = self.run_resolver(env_extra={"HOME": str(fake_home)})
+        self.assertEqual([r["id"] for r in result["roots"]], ["kk"])
+
+    def test_apostrophe_in_a_value_does_not_absorb_a_trailing_comment(self) -> None:
+        self.pack("o'brien-rules", "Rule")
+        self.config("packs:\n  - source: o'brien-rules  # team's rules\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["o'brien-rules"])
+
+    def test_entries_counts_every_parsed_entry(self) -> None:
+        self.pack("rules", "Rule")
+        self.config("packs:\n  - source: rules\n  - source: missing\n")
+        result = self.run_resolver()
+        self.assertEqual(result["entries"], 2)
+        self.assertEqual([r["id"] for r in result["roots"]], ["rules"])
+
+    def test_tree_url_regex_yields_base_ref_and_path(self) -> None:
+        proc = self.run_probe(
+            "t = m._TREE_URL_RE.match('https://github.com/o/r/tree/v2.0.0/packs/sub')\n"
+            "print(t.group('base'), t.group('ref'), t.group('path'))\n"
+        )
+        self.assertEqual(proc.stdout.strip(), "https://github.com/o/r v2.0.0 packs/sub")
+
+    @unittest.skipIf(IS_ROOT or os.name == "nt", "mode bits are advisory for root and absent on Windows")
+    def test_private_root_usable_repairs_an_owned_root_to_0700(self) -> None:
+        loose = self.tmp / "loose-root"
+        loose.mkdir()
+        loose.chmod(0o755)
+        proc = self.run_probe(
+            "import os, stat\n"
+            f"root = {str(loose)!r}\n"
+            "print(m._private_root_usable(root), oct(stat.S_IMODE(os.stat(root).st_mode)))\n"
+        )
+        self.assertEqual(proc.stdout.strip(), "True 0o700")
 
 
 if __name__ == "__main__":
