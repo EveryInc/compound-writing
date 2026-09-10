@@ -21,7 +21,7 @@ Use this authority order for voice work:
 6. Legacy `TASTE.md`, only when the project still maintains it.
 7. Plugin defaults only for unresolved gaps.
 
-Name the sources used in the assessment, pack rules included as `(pack: <id>, <file>)`. A passage that contradicts a matching pack rule is drift, reported with that citation. Do not treat plugin defaults as the writer's identity.
+Name the sources used in the assessment, matched pack rules included as `(pack: <id>, <file>)`. A passage that contradicts a matching pack rule is drift, reported with that citation. Pack resolution errors and warnings belong in the handoff only, not in the sources list. Do not treat plugin defaults as the writer's identity.
 
 ## Diagnose
 

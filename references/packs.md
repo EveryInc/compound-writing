@@ -18,15 +18,16 @@ The quickest path is `cw-packs` with a request like "scaffold a pack called hous
 
 The manual path is three steps and lands in the same place.
 
-**1. Write a rule file.** Anywhere in the writing home; `compound-packs/house-style/` is a fine convention:
+**1. Write a rule file.** Anywhere in the writing home; `compound-packs/house-style/` is a fine convention. Name the file for what the rule governs, in a short kebab-case name:
 
 ```markdown
 <!-- compound-packs/house-style/earn-the-ending.md -->
 ---
 title: The last paragraph extends the argument; it never recaps it
 applies_when:
-  - judging whether a piece is ready to publish
+  - writing the ending of an argumentative piece
   - revising the ending of an argumentative piece
+  - judging whether a piece is ready to publish
 tags: [endings, structure]
 ---
 
@@ -36,7 +37,7 @@ thesis in fresh words is a summary, and a summary is a cut. The one
 exception is an explainer whose format promises a recap.
 ```
 
-`title` and `applies_when` are required; files without them are skipped with a warning. `tags` helps matching.
+`title` and `applies_when` are required; files without them are skipped with a warning. `tags` helps matching. The first condition fires while drafting, the second during revision, the third at the final pass, so a home cannot draft a recap ending that its own final pass then rejects. Wrap a `title` that contains `: ` or `#`, or starts with a YAML-special character, in double quotes so strict YAML readers parse the frontmatter.
 
 **2. Declare it** in `<home>/.compound-writing/config.yaml`:
 
@@ -69,6 +70,8 @@ compound-packs/house-style/
 ```
 
 **A rule is discovered only when it is a top-level `.md` with `title` and `applies_when`; everything else is storage.**
+
+The same rule decides what a declared folder *is*. A folder with rules at its top level is one pack. A folder with no top-level rules is a *source* whose child folders become packs, each named after its folder. So `source: compound-packs/house-style` whose only rules sit in `house-style/rules/` publishes a pack called `rules`, not `house-style`; when that folder also holds a `README.md`, the resolver says so (`has no top-level rules; its subfolder ... was published as pack ...`). Move the rules up a level, or point `source:` at the subfolder.
 
 - **Subdirectories**, any name, hold supporting material: full example pieces, evidence, drafts of rules not yet ready. Nothing in them is read as a rule, however well-formed the file. The resolver warns (`pack <id> has N rule-shaped file(s) under <dir>/ that discovery never reads`) only when nothing at the pack's top level would be discovered, because then the pack registers and can never fire. When the top level has rules, `cw-packs` only shows the count of nested rule-shaped files.
 - **`README.md`** at the top level (any letter case) is the pack's description and never a rule, whatever frontmatter it carries. Every other top-level `.md` without `title` and `applies_when` is reported as `skipped pack file`, so park free-form notes in a subdirectory instead.
@@ -127,7 +130,7 @@ applies_when:
 
 Rules of thumb: one situation per line; use the vocabulary a writing request would use ("opening", "ending", "line edit", "ready to publish"); two or three concrete conditions beat one abstract one. Keep rules in one pack disjoint in what they prescribe: when two rules both reach the same sentence, a review names each one and has no way to decide which governs.
 
-**Scoping a rule to a step** is also just phrasing. Every consuming step matches `applies_when` against *its own* context, so a situational condition self-selects: "revising sentences for cadence" fires during a line edit and nowhere else; "judging whether a piece is ready to publish" fires at the final pass; a neutral condition like "writing the ending of an argumentative piece" correctly fires while drafting **and** again at review. Only frontmatter is re-read per step; a rule's body loads solely on a match. Unknown frontmatter keys are tolerated, so future fields can be added without breaking existing packs. Packs are read in full (every top-level file's frontmatter, up to 25 files per pack), so a condition sharing zero keywords with the request can still match, but a clearly worded situation matches more reliably.
+**Scoping a rule to a step** is also just phrasing. Every consuming step matches `applies_when` against *its own* context, so a situational condition self-selects: "revising sentences for cadence" fires during a line edit and nowhere else; "judging whether a piece is ready to publish" fires at the final pass; a neutral condition like "writing the ending of an argumentative piece" correctly fires while drafting **and** again at review. Phrasing reaches every step that does the named work: a readiness condition also fires in `cw-dev-edit`, which ends with a readiness indicator, and "revising the ending" fires in a line edit that touches the ending. Only frontmatter is re-read per step; a rule's body loads solely on a match. Unknown frontmatter keys are tolerated, so future fields can be added without breaking existing packs. Packs are read in full (every top-level file's frontmatter, up to 25 files per pack), so a condition sharing zero keywords with the request can still match, but a clearly worded situation matches more reliably.
 
 ## Every way to declare a source
 
@@ -169,7 +172,7 @@ Field reference:
 | `pack` | all | One id or a list: install exactly those. Omit for everything the source publishes. A named id the source does not publish is a loud error listing what is available. |
 | `id` | all | Rename a single-pack entry (for example two sources both publishing `voice`). |
 
-**Where the config lives.** `<home>/.compound-writing/config.yaml` is the shared list and travels with the writing home; `config.local.yaml` beside it **adds** personal packs on top and can never replace or drop shared ones. The home is found the way git finds a repository: the nearest folder at or above the working directory, or the active draft, that holds `.compound-writing/`, else the first that holds `.git`. The search never crosses a filesystem boundary, and a folder you do not own is skipped with a warning, so a config planted above your tree cannot steer a run. A symlinked draft resolves to the home of its physical location. A duplicate id across the two files errors loudly and keeps the first-declared entry.
+**Where the config lives.** `<home>/.compound-writing/config.yaml` is the shared list and travels with the writing home; `config.local.yaml` beside it **adds** personal packs on top and can never replace or drop shared ones. The home is the nearest folder at or above the working directory, or the active draft, that holds `.compound-writing/`. When no folder on the way up holds one, the innermost checkout (the first folder holding `.git`) is the home, so a plain repository reads its root config. A checkout nested inside a writing home, a manuscript under version control, inherits the home's packs; give it a `.compound-writing/` of its own to override them. The search never crosses a filesystem boundary or a `GIT_CEILING_DIRECTORIES` entry, does not consult git configuration (`GIT_DIR`, `safe.directory`, `GIT_DISCOVERY_ACROSS_FILESYSTEM`), and skips a folder you do not own with a warning, so a config planted above your tree cannot steer a run. A symlinked draft resolves to the home of its physical location. A duplicate id across the two files errors loudly and keeps the first-declared entry.
 
 ## Publish a pack for others
 
@@ -190,7 +193,7 @@ writing-packs/                      # git repo = the source
 - Tag releases (`git tag v1.0.0`) so consumers can pin; the "install" instructions for your readers are the two-line `packs:` entry.
 - A "marketplace" needs nothing from Compound Writing; it is any README listing pack URLs.
 
-One repository can carry both writing packs and engineering packs. Compound Writing reads only what `.compound-writing/config.yaml` declares; compound-engineering-plugin reads only what `.compound-engineering/config.yaml` declares. Because the file shape is shared, a rule you write once can be declared by either.
+One repository can carry both writing packs and engineering packs. Each plugin reads only its own config file (`.compound-writing/config.yaml` here, `.compound-engineering/config.yaml` there), but an entry without `pack:` installs every pack the source publishes, engineering packs included; their rules then sit unmatched until a writing step's `applies_when` check passes them over. Use `pack:` to install only the writing packs. Because the file shape is shared, a rule you write once can be declared by either plugin. The resolvers differ only in where they anchor: the three messages that name the anchor read `writing home` here where CE says `repository`, and this resolver adds a `home` field to its output.
 
 ## Big material in packs
 
@@ -221,7 +224,9 @@ The mechanism every step shares, resolution, matching, authority, and citation, 
 | One warning, packs missing this run | Git source unreachable (offline, no credentials, gone). The step continues without it and never blocks. `git binary not found` degrades git sources the same way; path sources still resolve |
 | `pack <id> not published -- <file> link(s) outside the source` | The pack holds a symlink whose target lies outside its source; nothing from that pack is read. Replace the link with a copy, or drop it |
 | A file silently ignored | Missing `title`/`applies_when` frontmatter. The resolver and `cw-packs` warn `skipped pack file <id>/<name>` |
-| My rules are in a subfolder and never show up | Discovery reads only top-level `.md` files; move the rules up a level. When the top level has no rule at all, the resolver warns `pack <id> has N rule-shaped file(s) under <dir>/ that discovery never reads` |
+| My rules are in a subfolder and never show up, or show up under the wrong name | Discovery reads only top-level `.md` files. A declared folder with no top-level rule is a source, so its rule-bearing subfolder publishes as a pack named after the subfolder (`has no top-level rules; its subfolder ... was published as pack ...`); a subfolder with its own rules one level deeper publishes nothing (`pack <id> has N rule-shaped file(s) under <dir>/ that discovery never reads`). Either way, move the rules to the top level of the folder you mean |
+| `- source: entry sits outside the packs: block` | The entry is indented under some other top-level key, so YAML does not make it part of `packs:`; move it under the key |
+| `id: must be a non-empty name` | An `id:` was empty, contained a path separator, or began with `-`; ids name folders and citations, so they are one plain path segment |
 | `home-relative source ... resolves outside the writing home` | A `source:` like `../shared` left the home. Use an absolute or `~` path for folders outside it |
 | Branch- or tag-pinned pack seems stale | Refs freeze at their cached resolution. Pin a full commit sha, or clear the cache (`/tmp/compound-writing-<uid>/cw-packs/`) |
 | No `.compound-writing/` and not in a git repo | The resolver reports no home; `cw-packs` creates the config in the writing-home folder you name |
@@ -234,7 +239,7 @@ The mechanism every step shares, resolution, matching, authority, and citation, 
 2. Give it the pack frontmatter: `title` plus a situational `applies_when`.
 3. Put it at the top level of a writable pack: a home-relative or `~` path source. Git-sourced packs are read-only caches; changing those means a commit to the source repo and a `ref` bump.
 
-`cw-save` automates the loop: it checks the declared packs before writing, reports a lesson a rule already prescribes with its citation, and offers a writable pack as the destination for a standing rule, scaffolding one through `cw-packs` when none exists. Every pack write waits for the writer's approval.
+`cw-save` automates the loop: it checks the declared packs before writing, reports a lesson a rule already prescribes with its citation, and offers a writable pack as the destination for a standing rule, asking which when more than one is writable and scaffolding one through `cw-packs` when none exists. Every pack write is shown in full, path, frontmatter, and body, and waits for the writer's approval; a non-interactive run never writes into a pack.
 
 ## Why packs aren't skills
 
