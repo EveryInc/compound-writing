@@ -1,0 +1,328 @@
+"""Behavioral tests for skills/cw-packs/scripts/packs-resolve.py.
+
+The script has a hyphenated name, so every test drives it through a
+subprocess and parses the single JSON object it prints.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+RESOLVER = REPO_ROOT / "skills" / "cw-packs" / "scripts" / "packs-resolve.py"
+
+RULE = textwrap.dedent(
+    """\
+    ---
+    title: {title}
+    applies_when:
+      - judging whether a piece is ready to publish
+    tags: [endings]
+    ---
+
+    {title}. The last paragraph must extend the argument, not recap it.
+    """
+)
+
+NOTE_WITHOUT_FRONTMATTER = "Just a note, not a rule.\n"
+
+
+def git_supports_end_of_options() -> bool:
+    if shutil.which("git") is None:
+        return False
+    proc = subprocess.run(["git", "--version"], capture_output=True, text=True)
+    parts = proc.stdout.strip().split()[-1].split(".")
+    try:
+        major, minor = int(parts[0]), int(parts[1])
+    except (IndexError, ValueError):
+        return False
+    return (major, minor) >= (2, 24)
+
+
+class ResolverHarness(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp(prefix="cw-packs-test-"))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.home = self.tmp / "home"
+        self.home.mkdir()
+        self.cache = self.tmp / "cache"
+
+    def write(self, relative: str, content: str) -> Path:
+        path = self.home / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def config(self, body: str, name: str = "config.yaml") -> Path:
+        return self.write(f".compound-writing/{name}", textwrap.dedent(body))
+
+    def pack(self, relative: str, *rules: str, readme: bool = True) -> Path:
+        directory = self.home / relative
+        directory.mkdir(parents=True, exist_ok=True)
+        if readme:
+            (directory / "README.md").write_text("House style pack.\n", encoding="utf-8")
+        for title in rules:
+            slug = title.lower().replace(" ", "-")
+            (directory / f"{slug}.md").write_text(RULE.format(title=title), encoding="utf-8")
+        return directory
+
+    def run_resolver(self, *args: str, cwd: Path | None = None, env_extra: dict | None = None) -> dict:
+        env = dict(os.environ)
+        env["CW_PACKS_CACHE_ROOT"] = str(self.cache)
+        env["CW_PACKS_GIT_TIMEOUT"] = "30"
+        if env_extra:
+            env.update(env_extra)
+        proc = subprocess.run(
+            [sys.executable, str(RESOLVER), *args],
+            cwd=str(cwd or self.home),
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        lines = [line for line in proc.stdout.splitlines() if line.strip()]
+        self.assertEqual(len(lines), 1, f"expected one JSON line, got: {proc.stdout!r}")
+        return json.loads(lines[0])
+
+
+class NoConfigTests(ResolverHarness):
+    def test_no_home_and_no_repo_yields_empty_result(self) -> None:
+        bare = self.tmp / "bare"
+        bare.mkdir()
+        result = self.run_resolver(cwd=bare)
+        self.assertEqual(result["roots"], [])
+        self.assertEqual(result["entries"], 0)
+        self.assertEqual(result["errors"], [])
+        self.assertIsNone(result["home"])
+        self.assertEqual(len(result["warnings"]), 1)
+
+    def test_home_without_packs_key_is_silent(self) -> None:
+        self.config("docs_root: notes\n")
+        result = self.run_resolver()
+        self.assertEqual(result, {"roots": [], "warnings": [], "errors": [], "entries": 0, "home": str(self.home.resolve())})
+
+    def test_git_toplevel_is_the_fallback_home(self) -> None:
+        repo = self.tmp / "repo"
+        (repo / "sub" / "deeper").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        result = self.run_resolver(cwd=repo / "sub" / "deeper")
+        self.assertEqual(result["home"], str(repo.resolve()))
+        self.assertEqual(result["entries"], 0)
+
+
+class PathSourceTests(ResolverHarness):
+    def test_home_relative_pack_publishes_rules_and_ignores_readme(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending", "Name the counterargument")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual(result["errors"], [])
+        self.assertEqual(result["warnings"], [])
+        self.assertEqual(len(result["roots"]), 1)
+        root = result["roots"][0]
+        self.assertEqual(root["id"], "house-style")
+        self.assertEqual(Path(root["dir"]), (self.home / "compound-packs" / "house-style").resolve())
+        self.assertEqual(root["nested_rule_shaped"], 0)
+        self.assertNotIn("url", root)
+
+    def test_note_without_frontmatter_is_reported_skipped(self) -> None:
+        pack = self.pack("compound-packs/house-style", "Earn the ending")
+        (pack / "notes.md").write_text(NOTE_WITHOUT_FRONTMATTER, encoding="utf-8")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual(len(result["roots"]), 1)
+        self.assertTrue(any("skipped pack file `house-style/notes.md`" in w for w in result["warnings"]))
+
+    def test_rules_only_in_subfolder_warn_and_publish_nothing(self) -> None:
+        self.pack("compound-packs/house-style/research", "Earn the ending", readme=False)
+        (self.home / "compound-packs" / "house-style" / "README.md").write_text("desc\n", encoding="utf-8")
+        self.config("packs:\n  - source: compound-packs\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        joined = "\n".join(result["warnings"])
+        self.assertIn("publishes no packs", joined)
+        self.assertIn("rule-shaped file(s) under `research/`", joined)
+        self.assertIn("references/packs.md", joined)
+
+    def test_nested_rule_shaped_files_are_counted_not_warned(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.pack("compound-packs/house-style/research", "Draft observation", readme=False)
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual(result["warnings"], [])
+        self.assertEqual(result["roots"][0]["nested_rule_shaped"], 1)
+
+    def test_multi_pack_source_publishes_each_child(self) -> None:
+        self.pack("packs/voice", "Plain verbs")
+        self.pack("packs/style", "Earn the ending")
+        self.config("packs:\n  - source: packs\n")
+        result = self.run_resolver()
+        self.assertEqual(sorted(r["id"] for r in result["roots"]), ["style", "voice"])
+
+    def test_pack_selection_and_id_override(self) -> None:
+        self.pack("packs/voice", "Plain verbs")
+        self.pack("packs/style", "Earn the ending")
+        self.config("packs:\n  - source: packs\n    pack: voice\n    id: every-voice\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["every-voice"])
+
+    def test_unpublished_selection_lists_available(self) -> None:
+        self.pack("packs/voice", "Plain verbs")
+        self.config("packs:\n  - source: packs\n    pack: [voice, missing]\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("missing not published" in e and "available: voice" in e for e in result["errors"]))
+
+    def test_ref_on_path_source_is_an_error(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config("packs:\n  - source: compound-packs/house-style\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("`ref:` is only valid on git sources" in e for e in result["errors"]))
+
+    def test_source_escaping_the_home_is_an_error(self) -> None:
+        outside = self.tmp / "outside"
+        outside.mkdir()
+        (outside / "rule.md").write_text(RULE.format(title="Escaped"), encoding="utf-8")
+        self.config("packs:\n  - source: ../outside\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("resolves outside the writing home" in e for e in result["errors"]))
+
+    def test_absolute_source_outside_the_home_is_allowed(self) -> None:
+        shared = self.tmp / "shared-packs" / "team"
+        shared.mkdir(parents=True)
+        (shared / "rule.md").write_text(RULE.format(title="Team rule"), encoding="utf-8")
+        self.config(f"packs:\n  - source: {shared}\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["team"])
+
+    @unittest.skipIf(os.name == "nt", "symlinks need privileges on Windows")
+    def test_symlink_leaving_the_source_refuses_the_pack(self) -> None:
+        pack = self.pack("compound-packs/house-style", "Earn the ending")
+        secret = self.tmp / "secret.md"
+        secret.write_text(RULE.format(title="Secret"), encoding="utf-8")
+        os.symlink(secret, pack / "resources-link.md")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        joined = "\n".join(result["errors"] + result["warnings"])
+        self.assertIn("links outside the source", joined)
+
+    def test_duplicate_id_keeps_first_declared(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.pack("personal/house-style", "Plain verbs")
+        self.config("packs:\n  - source: compound-packs/house-style\n")
+        self.config("packs:\n  - source: personal/house-style\n", name="config.local.yaml")
+        result = self.run_resolver()
+        self.assertEqual(len(result["roots"]), 1)
+        self.assertEqual(Path(result["roots"][0]["dir"]), (self.home / "compound-packs" / "house-style").resolve())
+        self.assertTrue(any("duplicate pack id `house-style`" in e and "config.local.yaml" in e for e in result["errors"]))
+
+    def test_home_flag_accepts_a_nested_file_path(self) -> None:
+        nested = self.tmp / "repo" / "writing"
+        nested.mkdir(parents=True)
+        (nested / ".compound-writing").mkdir()
+        (nested / ".compound-writing" / "config.yaml").write_text("packs:\n  - source: house\n", encoding="utf-8")
+        (nested / "house").mkdir()
+        (nested / "house" / "rule.md").write_text(RULE.format(title="Nested rule"), encoding="utf-8")
+        draft = nested / "drafts" / "piece" / "draft.md"
+        draft.parent.mkdir(parents=True)
+        draft.write_text("# Draft\n", encoding="utf-8")
+        result = self.run_resolver("--home", str(draft), cwd=self.tmp)
+        self.assertEqual(result["home"], str(nested.resolve()))
+        self.assertEqual([r["id"] for r in result["roots"]], ["house"])
+
+
+class DeclaredOnlyTests(ResolverHarness):
+    def test_malformed_packs_line_is_declared_with_error(self) -> None:
+        self.config("packs: compound-packs/house-style\n")
+        result = self.run_resolver("--declared-only")
+        self.assertTrue(result["declared"])
+        self.assertEqual(result["entries"], 0)
+        self.assertTrue(any("must be a block list" in e for e in result["errors"]))
+        self.assertEqual(result["home"], str(self.home.resolve()))
+        self.assertFalse(self.cache.exists())
+
+    def test_git_entry_is_shape_checked_without_cloning(self) -> None:
+        self.config("packs:\n  - source: https://github.com/org/pack\n    ref: v1\n")
+        result = self.run_resolver("--declared-only")
+        self.assertTrue(result["declared"])
+        self.assertEqual(result["entries"], 1)
+        self.assertEqual(result["errors"], [])
+        self.assertFalse(self.cache.exists())
+
+    def test_no_declaration_is_false(self) -> None:
+        self.config("docs_root: notes\n")
+        result = self.run_resolver("--declared-only")
+        self.assertFalse(result["declared"])
+
+    def test_unknown_key_is_an_error(self) -> None:
+        self.config("packs:\n  - source: compound-packs/x\n    stage: draft\n")
+        result = self.run_resolver("--declared-only")
+        self.assertTrue(any("unknown packs entry key `stage:`" in e for e in result["errors"]))
+
+
+class GitSourceTests(ResolverHarness):
+    def setUp(self) -> None:
+        super().setUp()
+        if not git_supports_end_of_options():
+            self.skipTest("git >= 2.24 required")
+        self.remote = self.tmp / "remote-pack"
+        self.remote.mkdir()
+        (self.remote / "rails").mkdir()
+        (self.remote / "rails" / "rule.md").write_text(RULE.format(title="Remote rule"), encoding="utf-8")
+        (self.remote / "README.md").write_text("Pack repo\n", encoding="utf-8")
+        git = ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "-C", str(self.remote)]
+        subprocess.run([*git, "init", "-q"], check=True)
+        subprocess.run([*git, "add", "."], check=True)
+        subprocess.run([*git, "commit", "-q", "-m", "pack"], check=True)
+        subprocess.run([*git, "tag", "v1.0.0"], check=True)
+        self.url = self.remote.resolve().as_uri()
+
+    def test_git_source_without_ref_is_an_error_and_siblings_resolve(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config(f"packs:\n  - source: {self.url}\n  - source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual([r["id"] for r in result["roots"]], ["house-style"])
+        self.assertTrue(any("requires `ref:`" in e for e in result["errors"]))
+
+    def test_tagged_git_source_is_cloned_then_cached(self) -> None:
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n")
+        first = self.run_resolver()
+        self.assertEqual(first["errors"], [])
+        self.assertEqual([r["id"] for r in first["roots"]], ["rails"])
+        root = first["roots"][0]
+        self.assertEqual(root["url"], self.url)
+        self.assertEqual(root["ref"], "v1.0.0")
+        self.assertTrue(Path(root["dir"]).is_relative_to(self.cache.resolve()))
+        cached_dirs = [p for p in self.cache.iterdir() if p.is_dir()]
+        self.assertEqual(len(cached_dirs), 1)
+        second = self.run_resolver()
+        self.assertEqual(second["roots"][0]["dir"], root["dir"])
+        self.assertEqual(len([p for p in self.cache.iterdir() if p.is_dir()]), 1)
+
+    def test_leading_dash_ref_is_rejected(self) -> None:
+        self.config(f"packs:\n  - source: {self.url}\n    ref: --upload-pack=echo\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("may not begin with `-`" in e for e in result["errors"]))
+
+    def test_unreachable_git_source_degrades_to_a_warning(self) -> None:
+        missing = (self.tmp / "nowhere").resolve().as_uri()
+        self.config(f"packs:\n  - source: {missing}\n    ref: v1\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertEqual(result["errors"], [])
+        self.assertTrue(any("source skipped" in w for w in result["warnings"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
