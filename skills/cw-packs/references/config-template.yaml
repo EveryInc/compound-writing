@@ -12,5 +12,5 @@
 #   - source: compound-packs/house-style                 # home-relative, read live
 #   - source: ~/compound-packs/every-voice               # machine-local, read live
 #   - source: https://github.com/org/writing-packs       # git, cached at ref
-#     ref: v1.2.0                                        # tag, sha, or branch (required for git)
+#     ref: v1.2.0                                        # tag, full sha, or branch (required for git)
 #     pack: [voice, style]                               # one id, a list, or omit for everything

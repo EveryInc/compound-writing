@@ -167,7 +167,7 @@ Field reference:
 | Field | Applies to | Meaning |
 |---|---|---|
 | `source` | all | Home-relative path, `~`/absolute path, or git URL. Required. |
-| `ref` | git only | Tag, sha, or branch. **Required for git; forbidden for paths.** Tags and shas reproduce exactly; a branch freezes at its cached resolution per machine. Pin tags for teams. |
+| `ref` | git only | Tag, full commit sha, or branch (a short sha cannot be fetched). **Required for git; forbidden for paths.** Tags and shas reproduce exactly; a branch freezes at its cached resolution per machine. Pin tags for teams. |
 | `path` | git only | Subfolder of the repo to use as the source root. A pasted GitHub `.../tree/<ref>/<sub>` URL fills `ref` and `path` itself. |
 | `pack` | all | One id or a list: install exactly those. Omit for everything the source publishes. A named id the source does not publish is a loud error listing what is available. |
 | `id` | all | Rename a single-pack entry (for example two sources both publishing `voice`). |
