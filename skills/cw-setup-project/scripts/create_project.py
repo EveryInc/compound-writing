@@ -14,6 +14,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("target", type=Path, help="Writing-home folder to create or initialize")
     parser.add_argument(
+        "--with-packs",
+        action="store_true",
+        help="Also create .compound-writing/config.yaml from the Compound Packs template (declares nothing until edited)",
+    )
+    parser.add_argument(
         "--add-missing",
         action="store_true",
         help="Add only missing template items to a non-empty existing folder",
@@ -24,10 +29,14 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     target = args.target.expanduser().resolve()
-    template = Path(__file__).resolve().parents[3] / "defaults" / "project-template"
+    plugin_root = Path(__file__).resolve().parents[3]
+    template = plugin_root / "defaults" / "project-template"
+    packs_template = plugin_root / "skills" / "cw-packs" / "references" / "config-template.yaml"
 
     if not template.is_dir():
         raise SystemExit(f"Project template not found: {template}")
+    if args.with_packs and not packs_template.is_file():
+        raise SystemExit(f"Packs config template not found: {packs_template}")
     if target.exists() and not target.is_dir():
         raise SystemExit(f"Target exists and is not a folder: {target}")
 
@@ -56,6 +65,15 @@ def main() -> int:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
         created.append(str(relative))
+
+    if args.with_packs:
+        config = target / ".compound-writing" / "config.yaml"
+        if config.exists() or config.is_symlink():
+            skipped.append(".compound-writing/config.yaml")
+        else:
+            config.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(packs_template, config)
+            created.append(".compound-writing/config.yaml")
 
     print(f"Writing home ready: {target}")
     if created:

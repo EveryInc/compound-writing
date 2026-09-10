@@ -34,7 +34,7 @@ When the command yields no JSON (no interpreter, script not found), report that 
 
 ## Declare An Existing Source
 
-When the user names a folder or git URL that already holds rules, draft the entry in the shape the guide documents (`source`, plus `ref` for git, optional `path`, `pack`, `id`), show it with the resolved home, the absolute config path, and its exact placement in that file, and write it only on approval. Shared packs belong in `config.yaml`; a machine-local or personal pack belongs in `config.local.yaml`. Create a missing `config.yaml` from `references/config-template.yaml` under the same approval. Run the check afterwards and report the new `pack <id>` line.
+When the user names a folder or git URL that already holds rules, draft the entry in the shape the guide documents (`source`, plus `ref` for git, optional `path`, `pack`, `id`), show it with the resolved home, the absolute config path, and its exact placement in that file, and write it only on approval. Shared packs belong in `config.yaml`; a machine-local or personal pack belongs in `config.local.yaml`. Create a missing `config.yaml` from `references/config-template.yaml` under the same approval (the same file `cw-setup-project --with-packs` creates, and the one shipped as `.compound-writing/config.example.yaml` at the plugin root); the writer never hand-writes it. Run the check afterwards and report the new `pack <id>` line.
 
 ## Scaffold A New Pack
 

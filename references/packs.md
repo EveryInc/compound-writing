@@ -46,6 +46,8 @@ packs:
   - source: compound-packs/house-style
 ```
 
+You do not have to write that file by hand: `cw-packs` creates it when it declares or scaffolds a pack, and `cw-setup-project --with-packs` creates it with the writing home. Both copy the plugin's template, which ships as `.compound-writing/config.example.yaml` at the plugin root and declares nothing until an entry is uncommented.
+
 **3. Done.** The next `cw-final-pass` on a draft whose last paragraph recaps the thesis reports:
 
 > Needs more work: the ending restates the thesis instead of extending it `(pack: house-style, earn-the-ending.md)`.
@@ -131,6 +133,26 @@ applies_when:
 Rules of thumb: one situation per line; use the vocabulary a writing request would use ("opening", "ending", "line edit", "ready to publish"); two or three concrete conditions beat one abstract one. Keep rules in one pack disjoint in what they prescribe: when two rules both reach the same sentence, a review names each one and has no way to decide which governs.
 
 **Scoping a rule to a step** is also just phrasing. Every consuming step matches `applies_when` against *its own* context, so a situational condition self-selects: "revising sentences for cadence" fires during a line edit and nowhere else; "judging whether a piece is ready to publish" fires at the final pass; a neutral condition like "writing the ending of an argumentative piece" correctly fires while drafting **and** again at review. Phrasing reaches every step that does the named work: a readiness condition also fires in `cw-dev-edit`, which ends with a readiness indicator, and "revising the ending" fires in a line edit that touches the ending. Only frontmatter is re-read per step; a rule's body loads solely on a match. Unknown frontmatter keys are tolerated, so future fields can be added without breaking existing packs. Packs are read in full (every top-level file's frontmatter, up to 25 files per pack), so a condition sharing zero keywords with the request can still match, but a clearly worded situation matches more reliably.
+
+## Example config
+
+A complete `<home>/.compound-writing/config.yaml`, ready to paste. Delete the entries you do not use; the file may hold nothing but comments.
+
+```yaml
+# Compound Writing configuration for this writing home.
+# Shared settings live here and travel with the home. Personal or machine-local
+# additions go in config.local.yaml beside this file, which adds to this one
+# and never replaces it; keep it out of version control.
+
+packs:
+  # The house's own rules, kept in this writing home and read live.
+  - source: compound-packs/house-style
+
+  # A publication's shared packs, pinned to a release so every writer reads the same rules.
+  - source: https://github.com/org/writing-packs
+    ref: v1.2.0
+    pack: [voice, style]
+```
 
 ## Every way to declare a source
 

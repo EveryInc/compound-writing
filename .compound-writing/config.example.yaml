@@ -1,0 +1,16 @@
+# Compound Writing configuration for this writing home.
+#
+# Shared settings live in this file and travel with the home. Personal or
+# machine-local additions go in `config.local.yaml` beside it; that file adds
+# to this one and never replaces it, so keep it out of version control.
+#
+# Compound Packs: declared folders of writing rules that every Compound
+# Writing step reads and cites. Nothing happens until an entry is uncommented
+# under a live `packs:` key. Guide: references/packs.md in the plugin.
+#
+# packs:
+#   - source: compound-packs/house-style                 # home-relative, read live
+#   - source: ~/compound-packs/every-voice               # machine-local, read live
+#   - source: https://github.com/org/writing-packs       # git, cached at ref
+#     ref: v1.2.0                                        # tag, full sha, or branch (required for git)
+#     pack: [voice, style]                               # one id, a list, or omit for everything

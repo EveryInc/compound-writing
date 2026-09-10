@@ -44,6 +44,8 @@ python3 "<plugin-root>/skills/cw-setup-project/scripts/create_project.py" "/path
 
 `--add-missing` creates only absent items. Preserve every existing file and convention.
 
+When the writer asks for Compound Packs during setup, or names standards shared with a publication or team, add `--with-packs`: it also creates `.compound-writing/config.yaml` from the template in `skills/cw-packs/references/config-template.yaml`, fully commented, so it declares nothing until a `packs:` entry is uncommented or `cw-packs` appends one. It is never part of the default scaffold, and an existing config is preserved. `cw-packs` creates the same file on demand later, so nobody hand-writes it.
+
 ## Keep The Split Clear
 
 - `VOICE.md` answers: **How should the sentences sound?** Put syntax, diction, and tone here, including cadence, rhythm, register, punctuation, and verbal tics.

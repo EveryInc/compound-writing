@@ -21,6 +21,8 @@ SKILLS = REPO_ROOT / "skills"
 COMMANDS = REPO_ROOT / "commands"
 PROJECT_TEMPLATE = REPO_ROOT / "defaults" / "project-template"
 ALLOWLIST = REPO_ROOT / "release" / "allowlist.json"
+CONFIG_TEMPLATE = REPO_ROOT / "skills" / "cw-packs" / "references" / "config-template.yaml"
+CONFIG_EXAMPLE = REPO_ROOT / ".compound-writing" / "config.example.yaml"
 
 NAME_RE = re.compile(r"^cw-[a-z0-9]+(?:-[a-z0-9]+)*$")
 ALLOWED_FIELDS = {"name", "description"}
@@ -120,6 +122,14 @@ class PublicAllowlistTests(unittest.TestCase):
         self.assertIn("cw-packs", self.allowlist["skills"])
         self.assertIn("cw-compound", self.allowlist["commands"])
 
+
+class ConfigExampleTests(unittest.TestCase):
+    def test_root_example_config_matches_the_template_cw_packs_copies(self) -> None:
+        self.assertEqual(CONFIG_EXAMPLE.read_bytes(), CONFIG_TEMPLATE.read_bytes())
+
+    def test_example_config_declares_nothing_live(self) -> None:
+        live = [line for line in CONFIG_TEMPLATE.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
+        self.assertEqual(live, [])
 
 
 class WritingHomeScaffoldTests(unittest.TestCase):
