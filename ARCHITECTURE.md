@@ -101,7 +101,7 @@ Compound learning means updating a maintained context surface, not claiming priv
 - `.claude-plugin/` and `agents/` provide Claude compatibility and optional subagent execution.
 - `commands/` is a compatibility/help surface, not a second implementation of the skills. An alias such as `cw-compound` routes to its skill and adds no behavior; commands reach Claude Code only, since the Codex manifest packages `skills/`.
 - The packs resolver has one canonical copy, `skills/cw-packs/scripts/packs-resolve.py`; other skills reference it by plugin-relative path rather than carrying copies.
-- Public releases are assembled from an explicit allowlist containing the full generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
+- Public releases are assembled from an explicit allowlist containing the full generic toolbox: `release/allowlist.json` names every skill and command allowed here, and the packaging tests hold the tree to it. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
 - Runtime cache or installed plugin folders are derived copies, never source of truth.
 - Cross-platform `SKILL.md` frontmatter uses only the shared Agent Skills fields: `name` and `description`.
 - Every user-invokable skill and compatibility command uses the `cw-<name>` convention; skill folder names and command filenames match their declared names.
@@ -121,5 +121,5 @@ An architecture change is ready when:
 8. New workflows do not create or depend on `TASTE.md`, `context.md`, `published/`, `.status.yaml`, or hidden plugin-owned onboarding state.
 9. Documentation does not advertise hand-maintained component counts as product behavior.
 10. Existing user changes and project-local conventions remain authoritative.
-11. The public build contains only allowlisted generic skills and no references to excluded editorial or personal overlays.
+11. The public build contains only the skills and commands in `release/allowlist.json` and no references to excluded editorial or personal overlays (`python3 -m unittest discover -s tests`).
 12. With no `packs:` declared, no skill mentions packs and output is unchanged; the resolver publishes only top-level rules with `title` and `applies_when`, refuses a pack that links outside its source, and never stops a run on a bad entry (`python3 -m unittest discover -s tests`).

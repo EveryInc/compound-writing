@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import tempfile
@@ -19,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILLS = REPO_ROOT / "skills"
 COMMANDS = REPO_ROOT / "commands"
 PROJECT_TEMPLATE = REPO_ROOT / "defaults" / "project-template"
+ALLOWLIST = REPO_ROOT / "release" / "allowlist.json"
 
 NAME_RE = re.compile(r"^cw-[a-z0-9]+(?:-[a-z0-9]+)*$")
 ALLOWED_FIELDS = {"name", "description"}
@@ -89,6 +91,35 @@ class SkillPackagingTests(unittest.TestCase):
         for relative in ("SKILL.md", "scripts/packs-resolve.py", "assets/pack-rule-template.md", "references/config-template.yaml"):
             self.assertTrue((packs / relative).is_file(), relative)
         self.assertTrue((REPO_ROOT / "references" / "packs.md").is_file())
+
+
+class PublicAllowlistTests(unittest.TestCase):
+    """release/allowlist.json is the explicit list of what the public package ships.
+
+    The tree and the list must agree in both directions: a skill or command
+    that is not listed does not belong in the public repository, and a listed
+    name that has no folder or file is a stale entry.
+    """
+
+    allowlist = json.loads(ALLOWLIST.read_text(encoding="utf-8"))
+
+    def test_skills_match_the_allowlist_exactly(self) -> None:
+        on_disk = sorted(p.name for p in SKILLS.iterdir() if p.is_dir())
+        self.assertEqual(on_disk, self.allowlist["skills"])
+
+    def test_commands_match_the_allowlist_exactly(self) -> None:
+        on_disk = sorted(p.stem for p in COMMANDS.glob("*.md"))
+        self.assertEqual(on_disk, self.allowlist["commands"])
+
+    def test_allowlist_is_sorted_and_unique(self) -> None:
+        for key in ("skills", "commands"):
+            names = self.allowlist[key]
+            self.assertEqual(names, sorted(set(names)), key)
+
+    def test_packs_surfaces_are_allowlisted(self) -> None:
+        self.assertIn("cw-packs", self.allowlist["skills"])
+        self.assertIn("cw-compound", self.allowlist["commands"])
+
 
 
 class WritingHomeScaffoldTests(unittest.TestCase):

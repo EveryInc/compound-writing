@@ -170,6 +170,7 @@ compound-writing/
 ├── commands/            # Claude compatibility/help surfaces
 ├── defaults/            # Optional fallback templates
 ├── references/          # Shared architecture, context, and packs contracts
+├── release/             # allowlist.json: the skills and commands the public package ships
 ├── skills/              # Canonical cross-runtime workflows
 ├── tests/               # Resolver and packaging tests (python3 -m unittest discover -s tests)
 ├── ARCHITECTURE.md
@@ -178,7 +179,7 @@ compound-writing/
 
 `skills/` is the source of truth for writing behavior. Installed plugin directories and caches are derived runtime copies.
 
-Public releases are built from an explicit generic-skill allowlist. Internal or publication-specific extensions are not included in the published package.
+Public releases are built from an explicit generic-skill allowlist, `release/allowlist.json`: the skills and commands allowed to ship here. `tests/test_packaging.py` fails when `skills/` or `commands/` and that list disagree, so adding to the public package is a deliberate edit. Internal or publication-specific extensions are not included in the published package.
 
 ## Installation
 
