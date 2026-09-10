@@ -63,9 +63,12 @@ A published pack is a directory a consumer lists and reads itself, so nothing
 in it may link outside its source: a pack whose tree holds such a link is not
 published (a loud per-entry error), never trimmed a file at a time.
 
-This script is a port of compound-engineering-plugin's `packs-resolve.py`; the
-pack format, entry fields, and error vocabulary are kept identical so one pack
-repository can serve both plugins.
+This script is a port of compound-engineering-plugin's `packs-resolve.py`. The
+pack format, entry fields, guards, and per-entry error vocabulary are kept
+identical so one pack repository can serve both plugins; the messages that
+name the anchor differ on purpose (`writing home` for `repository`, this
+plugin's guide path, and the no-home warning), and `home` is added to every
+output shape.
 """
 
 from __future__ import annotations
@@ -214,8 +217,13 @@ def parse_packs_block(path: str, errors: list) -> list:
     """Return the entry dicts under this file's top-level `packs:` key."""
     if not os.path.isfile(path):
         return []
-    with open(path, encoding="utf-8-sig", errors="replace") as fh:
-        lines = fh.read().splitlines()
+    try:
+        with open(path, encoding="utf-8-sig", errors="replace") as fh:
+            lines = fh.read().splitlines()
+    except OSError as exc:
+        # One unreadable layer is that layer's error; the other layer still loads.
+        errors.append(f"{os.path.basename(path)}: cannot read config file ({exc.strerror or exc})")
+        return []
     entries, in_packs, current, pending_list_key = [], False, None, None
     for lineno, raw in enumerate(lines, 1):
         line = _strip_comment(raw)
@@ -236,10 +244,17 @@ def parse_packs_block(path: str, errors: list) -> list:
                 )
             current, pending_list_key = None, None
             continue
-        if not in_packs:
-            continue
         stripped = line.strip()
         loc = f"{os.path.basename(path)}:{lineno}"
+        if not in_packs:
+            if stripped.startswith("- source:"):
+                # An entry indented under some other top-level key never joins
+                # the packs list; say so instead of dropping it silently.
+                errors.append(
+                    f"{loc}: `- source:` entry sits outside the `packs:` block and is ignored"
+                    " -- move it under the `packs:` key"
+                )
+            continue
         if stripped.startswith("- ") or stripped == "-":
             body = stripped[1:].strip()
             if pending_list_key and current is not None and ":" not in body:
@@ -397,10 +412,11 @@ def _is_knowledge_file(path: str) -> bool:
 
 
 def _contained_md_files(directory: str, boundary: str, escaped: list) -> list:
-    """Paths of the `.md` entries directly under `directory`, minus its README,
-    whose real path stays within `boundary` (a realpath). An entry that links
-    outside it is appended to `escaped` and never opened, so a pack cannot read
-    files off the user's machine."""
+    """Paths of the regular-file `.md` entries directly under `directory`, minus
+    its README, whose real path stays within `boundary` (a realpath). An entry
+    that links outside it is appended to `escaped` and never opened, so a pack
+    cannot read files off the user's machine. A directory or a FIFO named `*.md`
+    is not a file and is never opened (opening a FIFO would block forever)."""
     try:
         names = sorted(os.listdir(directory))
     except OSError:
@@ -410,10 +426,10 @@ def _contained_md_files(directory: str, boundary: str, escaped: list) -> list:
         if not name.endswith(".md") or name.lower() == _README:
             continue
         child = os.path.join(directory, name)
-        if _within(os.path.realpath(child), boundary):
-            files.append(child)
-        else:
+        if not _within(os.path.realpath(child), boundary):
             escaped.append(child)
+        elif os.path.isfile(child):
+            files.append(child)
     return files
 
 
@@ -441,15 +457,36 @@ def _has_knowledge_files(directory: str, boundary: str, escaped: list) -> bool:
     return any(_is_knowledge_file(f) for f in _contained_md_files(directory, boundary, escaped))
 
 
+def _has_readme(directory: str) -> bool:
+    try:
+        return any(name.lower() == _README for name in os.listdir(directory))
+    except OSError:
+        return False
+
+
 def _escaping_links(root: str, boundary: str) -> list:
-    """Symlinks anywhere under `root` (walked without following links) whose real
-    path leaves `boundary`, sorted. Only a link can leave: every other entry sits
-    under `root`, which is already inside the boundary."""
-    leaks = []
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        for name in dirnames + filenames:
+    """Entries reachable under `root` whose real path leaves `boundary`, sorted.
+
+    Directory links that stay inside the boundary are followed, each real
+    directory once, so a link into a sibling folder cannot hide a second link
+    beneath it that leaves the source (the two-hop escape). Only a link can
+    leave: every plain entry sits under a directory already inside the boundary.
+    """
+    leaks, seen = [], {os.path.realpath(root)}
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=True):
+        kept = []
+        for name in dirnames:
             child = os.path.join(dirpath, name)
-            if os.path.islink(child) and not _within(os.path.realpath(child), boundary):
+            real = os.path.realpath(child)
+            if not _within(real, boundary):
+                leaks.append(child)
+            elif real not in seen:
+                seen.add(real)
+                kept.append(name)
+        dirnames[:] = kept
+        for name in filenames:
+            child = os.path.join(dirpath, name)
+            if not _within(os.path.realpath(child), boundary):
                 leaks.append(child)
     return sorted(leaks)
 
@@ -506,6 +543,17 @@ def nested_rules_warning(pack_id: str, pack_dir: str, boundary: str) -> str | No
 
 def _entry_label(entry: dict) -> str:
     return f"{entry.get('_origin', 'config')}:{entry.get('_line', '?')}"
+
+
+def _valid_pack_id(value: str) -> bool:
+    """An id names a directory in citations and scaffolds, so it must be a
+    non-empty single path segment: no separators, no `.`/`..`, no leading `-`,
+    no control characters."""
+    if not value or value != value.strip() or value in (".", ".."):
+        return False
+    if value.startswith("-") or "/" in value or "\\" in value or os.sep in value:
+        return False
+    return all(ord(ch) >= 32 for ch in value)
 
 
 def _entry_shape_ok(entry: dict, label: str, errors: list) -> bool:
@@ -609,6 +657,16 @@ def resolve_entry(entry: dict, home_root: str, roots: list, warnings: list, erro
             if nested:
                 warnings.append(f"{label}: {nested}")
         return
+    if source_root not in published.values() and len(published) == 1 and _has_readme(source_root):
+        # A folder with a README, no top-level rule, and one rule-bearing
+        # subfolder is usually a pack whose rules sit one level too deep, not a
+        # multi-pack source; it publishes under the subfolder's name, so say so.
+        (child_name,) = published
+        warnings.append(
+            f"{label}: source `{source}` has no top-level rules; its subfolder `{child_name}/` was"
+            f" published as pack `{child_name}` -- if `{source}` is itself the pack, move the rules"
+            f" to its top level (see {GUIDE}, Pack layout)"
+        )
 
     selection = entry.get("pack")
     if selection is None:
@@ -629,6 +687,12 @@ def resolve_entry(entry: dict, home_root: str, roots: list, warnings: list, erro
 
     override = entry.get("id")
     if override is not None:
+        if not _valid_pack_id(str(override)):
+            errors.append(
+                f"{label}: `id:` must be a non-empty name with no path separators, `.`/`..`,"
+                f" leading `-`, or control characters (got {str(override)!r})"
+            )
+            return
         if len(selected) != 1:
             errors.append(f"{label}: `id:` override requires the entry to install exactly one pack")
             return
@@ -736,7 +800,11 @@ def _main(argv: list) -> int:
     args = parser.parse_args(argv)
     warnings, errors, roots, entries = [], [], [], []
 
-    home_root = _home_root(args.home or os.getcwd(), warnings)
+    try:
+        start = args.home or os.getcwd()
+    except OSError:  # the working directory was deleted underneath us
+        start = None
+    home_root = _home_root(start, warnings) if start is not None else None
     if home_root is None:
         warnings.append(f"no writing home (a directory holding `{CONFIG_DIR}/` or `.git`) found; no Compound Writing config to read")
         return _emit(args.declared_only, entries, roots, warnings, errors, None)
