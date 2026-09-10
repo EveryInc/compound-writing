@@ -97,4 +97,4 @@ Finish the requested outcome instead of automatically pushing the user into the 
 - what changed or was produced;
 - any source, thesis, or editorial uncertainty that still needs judgment;
 - any recurring preference or failure pattern worth capturing through `cw-save`;
-- any pack resolution error or warning, once, with the pack rules that shaped the work cited `(pack: <id>, <file>)`.
+- when packs are declared: the pack rules that shaped the work, cited `(pack: <id>, <file>)`, and any resolution error or warning, once. Say nothing about packs when none are declared.

@@ -10,6 +10,8 @@
 from __future__ import annotations
 
 import re
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -69,9 +71,18 @@ class SkillPackagingTests(unittest.TestCase):
                 check_surface(command, command.stem)
 
     def test_colon_separated_name_violates_the_convention(self) -> None:
-        self.assertIsNone(NAME_RE.match("cr:compound"))
-        self.assertIsNone(NAME_RE.match("cw:compound"))
-        self.assertIsNotNone(NAME_RE.match("cw-compound"))
+        tmp = Path(tempfile.mkdtemp(prefix="cw-packaging-test-"))
+        self.addCleanup(shutil.rmtree, tmp, True)
+        for index, name in enumerate(("cr:compound", "cw:compound", "compound")):
+            skill = tmp / f"rejected-{index}"
+            skill.mkdir()
+            (skill / "SKILL.md").write_text(f"---\nname: {name}\ndescription: alias\n---\n", encoding="utf-8")
+            with self.subTest(name=name), self.assertRaises(AssertionError):
+                check_surface(skill / "SKILL.md", name)
+        ok = tmp / "cw-compound"
+        ok.mkdir()
+        (ok / "SKILL.md").write_text("---\nname: cw-compound\ndescription: alias\n---\n", encoding="utf-8")
+        check_surface(ok / "SKILL.md", "cw-compound")
 
     def test_packs_skill_ships_its_resolver_and_templates(self) -> None:
         packs = SKILLS / "cw-packs"

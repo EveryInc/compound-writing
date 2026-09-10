@@ -72,13 +72,13 @@ Examples:
 
 A writing home may declare Compound Packs: folders of prescriptive writing rules, each a top-level `.md` file with `title` and `applies_when` frontmatter, that load beside `VOICE.md` and `STYLE.md`. `packs.md` in this folder is the guide. Packs are declared, never scanned: with no `packs:` entry in `<home>/.compound-writing/config.yaml` or `config.local.yaml`, nothing in this section applies and no skill mentions packs.
 
-Resolve once per session at the step that first loads context (Scribe, or the skill the user invoked directly), with the bundled resolver located relative to the plugin:
+Resolve once per session at the step that first loads context (Scribe, or the skill the user invoked directly), with the bundled resolver. `<plugin-root>` is the directory two levels above the invoking `SKILL.md`, the one holding this `references/` folder; it is never the working directory:
 
 ```bash
 python3 "<plugin-root>/skills/cw-packs/scripts/packs-resolve.py" --home "<active draft or working directory>"
 ```
 
-Carry the JSON's `roots` (pack `id`, absolute `dir`, plus `url`/`ref` when git-sourced) into every later step. Surface `errors` and `warnings` once, in the handoff, and nowhere else. When the command yields no JSON (no interpreter, script not found), packs are unresolved for this run: continue without them, say so once, and never stop the work for it.
+Carry the JSON's `roots` (pack `id`, absolute `dir`, plus `url`/`ref` when git-sourced) into every later step. When `entries` is 0 and `errors` is empty, the home declares no packs: say nothing about packs, whatever `warnings` holds. Otherwise surface `errors` and `warnings` once, in the handoff, and nowhere else. When the command yields no JSON (no interpreter, script not found), packs are unresolved for this run: continue without them, say so once, and never stop the work for it.
 
 Match at each step: list each root's top-level `.md` files (up to 25 per pack), read only their frontmatter, and judge which `applies_when` conditions describe the work in front of you: drafting a section, revising sentences, judging readiness. Read a rule's body only on a match. Voice-shaped and style-shaped rules self-select by how their conditions are phrased; there is no stage or layer field.
 

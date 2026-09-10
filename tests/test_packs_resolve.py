@@ -6,6 +6,8 @@ subprocess and parses the single JSON object it prints.
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import json
 import os
 import shutil
@@ -35,6 +37,7 @@ RULE = textwrap.dedent(
 NOTE_WITHOUT_FRONTMATTER = "Just a note, not a rule.\n"
 
 
+@functools.lru_cache(maxsize=None)
 def git_supports_end_of_options() -> bool:
     if shutil.which("git") is None:
         return False
@@ -78,6 +81,9 @@ class ResolverHarness(unittest.TestCase):
         env = dict(os.environ)
         env["CW_PACKS_CACHE_ROOT"] = str(self.cache)
         env["CW_PACKS_GIT_TIMEOUT"] = "30"
+        # Keep home discovery inside the sandbox even when the system tempdir
+        # itself sits under a git checkout.
+        env["GIT_CEILING_DIRECTORIES"] = str(self.tmp.resolve())
         if env_extra:
             env.update(env_extra)
         proc = subprocess.run(
@@ -103,19 +109,44 @@ class NoConfigTests(ResolverHarness):
         self.assertEqual(result["errors"], [])
         self.assertIsNone(result["home"])
         self.assertEqual(len(result["warnings"]), 1)
+        self.assertIn("no writing home", result["warnings"][0])
 
     def test_home_without_packs_key_is_silent(self) -> None:
         self.config("docs_root: notes\n")
         result = self.run_resolver()
         self.assertEqual(result, {"roots": [], "warnings": [], "errors": [], "entries": 0, "home": str(self.home.resolve())})
 
-    def test_git_toplevel_is_the_fallback_home(self) -> None:
+    def test_checkout_toplevel_is_the_fallback_home(self) -> None:
         repo = self.tmp / "repo"
         (repo / "sub" / "deeper").mkdir(parents=True)
-        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        (repo / ".git").mkdir()
         result = self.run_resolver(cwd=repo / "sub" / "deeper")
         self.assertEqual(result["home"], str(repo.resolve()))
         self.assertEqual(result["entries"], 0)
+        self.assertEqual(result["warnings"], [])
+
+    def test_worktree_git_file_marks_the_checkout(self) -> None:
+        repo = self.tmp / "worktree"
+        (repo / "sub").mkdir(parents=True)
+        (repo / ".git").write_text("gitdir: /elsewhere/.git/worktrees/x\n", encoding="utf-8")
+        result = self.run_resolver(cwd=repo / "sub")
+        self.assertEqual(result["home"], str(repo.resolve()))
+
+    def test_config_inside_checkout_wins_over_checkout_root(self) -> None:
+        repo = self.tmp / "repo"
+        nested = repo / "writing"
+        (nested / ".compound-writing").mkdir(parents=True)
+        (repo / ".git").mkdir()
+        result = self.run_resolver(cwd=nested)
+        self.assertEqual(result["home"], str(nested.resolve()))
+
+    def test_ceiling_directory_stops_the_walk(self) -> None:
+        above = self.tmp / "above"
+        (above / ".compound-writing").mkdir(parents=True)
+        below = above / "work" / "deep"
+        below.mkdir(parents=True)
+        result = self.run_resolver(cwd=below, env_extra={"GIT_CEILING_DIRECTORIES": str(above.resolve())})
+        self.assertIsNone(result["home"])
 
 
 class PathSourceTests(ResolverHarness):
@@ -172,6 +203,54 @@ class PathSourceTests(ResolverHarness):
         self.config("packs:\n  - source: packs\n    pack: voice\n    id: every-voice\n")
         result = self.run_resolver()
         self.assertEqual([r["id"] for r in result["roots"]], ["every-voice"])
+        self.assertEqual(Path(result["roots"][0]["dir"]), (self.home / "packs" / "voice").resolve())
+
+    def test_id_override_requires_a_single_selected_pack(self) -> None:
+        self.pack("packs/voice", "Plain verbs")
+        self.pack("packs/style", "Earn the ending")
+        self.config("packs:\n  - source: packs\n    pack: [voice, style]\n    id: both\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("requires the entry to install exactly one pack" in e for e in result["errors"]))
+
+    def test_empty_pack_selection_installs_nothing_with_a_warning(self) -> None:
+        self.pack("packs/voice", "Plain verbs")
+        self.config("packs:\n  - source: packs\n    pack: []\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertEqual(result["errors"], [])
+        self.assertTrue(any("lists no ids; nothing installed" in w for w in result["warnings"]))
+
+    def test_zero_indent_list_items_parse(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        self.config("packs:\n- source: compound-packs/house-style\n")
+        result = self.run_resolver()
+        self.assertEqual(result["entries"], 1)
+        self.assertEqual([r["id"] for r in result["roots"]], ["house-style"])
+
+    def test_bom_and_crlf_config_parses(self) -> None:
+        self.pack("compound-packs/house-style", "Earn the ending")
+        path = self.home / ".compound-writing" / "config.yaml"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"\xef\xbb\xbfpacks:\r\n  - source: compound-packs/house-style\r\n")
+        result = self.run_resolver()
+        self.assertEqual(result["errors"], [])
+        self.assertEqual([r["id"] for r in result["roots"]], ["house-style"])
+
+    def test_tree_url_conflicting_ref_and_path_are_errors(self) -> None:
+        self.config(
+            "packs:\n"
+            "  - source: https://github.com/org/pack/tree/v1.0.0/packs\n"
+            "    ref: v2.0.0\n"
+            "  - source: https://github.com/org/pack/tree/v1.0.0/packs\n"
+            "    path: other\n"
+        )
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertFalse(self.cache.exists() and any(self.cache.iterdir()))
+        joined = "\n".join(result["errors"])
+        self.assertIn("tree URL pins ref `v1.0.0` but entry says `ref: v2.0.0`", joined)
+        self.assertIn("tree URL path `packs` conflicts with `path: other`", joined)
 
     def test_unpublished_selection_lists_available(self) -> None:
         self.pack("packs/voice", "Plain verbs")
@@ -308,6 +387,33 @@ class GitSourceTests(ResolverHarness):
         second = self.run_resolver()
         self.assertEqual(second["roots"][0]["dir"], root["dir"])
         self.assertEqual(len([p for p in self.cache.iterdir() if p.is_dir()]), 1)
+
+    def test_path_escaping_the_checkout_is_an_error(self) -> None:
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n    path: ../../etc\n")
+        result = self.run_resolver()
+        self.assertEqual(result["roots"], [])
+        self.assertTrue(any("escapes the source checkout" in e for e in result["errors"]))
+
+    def test_path_selects_a_subfolder_of_the_checkout(self) -> None:
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n    path: rails\n")
+        result = self.run_resolver()
+        self.assertEqual(result["errors"], [])
+        self.assertEqual([r["id"] for r in result["roots"]], ["rails"])
+
+    @unittest.skipIf(os.name == "nt", "symlinks need privileges on Windows")
+    def test_symlink_planted_at_the_cache_key_is_replaced(self) -> None:
+        self.cache.mkdir()
+        key = hashlib.sha256(f"{self.url}\nv1.0.0".encode()).hexdigest()
+        decoy = self.tmp / "decoy"
+        decoy.mkdir()
+        (decoy / "rule.md").write_text(RULE.format(title="Planted"), encoding="utf-8")
+        os.symlink(decoy, self.cache / key)
+        self.config(f"packs:\n  - source: {self.url}\n    ref: v1.0.0\n")
+        result = self.run_resolver()
+        self.assertTrue(any("is a symlink or not owned by this user; refetching" in w for w in result["warnings"]))
+        self.assertEqual([r["id"] for r in result["roots"]], ["rails"])
+        self.assertFalse((self.cache / key).is_symlink())
+        self.assertTrue((decoy / "rule.md").exists())
 
     def test_leading_dash_ref_is_rejected(self) -> None:
         self.config(f"packs:\n  - source: {self.url}\n    ref: --upload-pack=echo\n")

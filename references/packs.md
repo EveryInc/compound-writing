@@ -169,7 +169,7 @@ Field reference:
 | `pack` | all | One id or a list: install exactly those. Omit for everything the source publishes. A named id the source does not publish is a loud error listing what is available. |
 | `id` | all | Rename a single-pack entry (for example two sources both publishing `voice`). |
 
-**Where the config lives.** `<home>/.compound-writing/config.yaml` is the shared list and travels with the writing home; `config.local.yaml` beside it **adds** personal packs on top and can never replace or drop shared ones. The home is the nearest folder at or above the working directory, or the active draft, that holds `.compound-writing/`; the git top level is the fallback. A duplicate id across the two files errors loudly and keeps the first-declared entry.
+**Where the config lives.** `<home>/.compound-writing/config.yaml` is the shared list and travels with the writing home; `config.local.yaml` beside it **adds** personal packs on top and can never replace or drop shared ones. The home is found the way git finds a repository: the nearest folder at or above the working directory, or the active draft, that holds `.compound-writing/`, else the first that holds `.git`. The search never crosses a filesystem boundary, and a folder you do not own is skipped with a warning, so a config planted above your tree cannot steer a run. A symlinked draft resolves to the home of its physical location. A duplicate id across the two files errors loudly and keeps the first-declared entry.
 
 ## Publish a pack for others
 
@@ -194,7 +194,7 @@ One repository can carry both writing packs and engineering packs. Compound Writ
 
 ## Big material in packs
 
-Rules stay small; the material they lean on can be large and can live **inside the pack**, in a subdirectory discovery never reads. Put full example pieces, a banned-phrase list, or a house glossary in `examples/` or `resources/`, and point at it from a rule with the access method: "compare the ending against the two pieces in `examples/`; the banned list is `resources/banned-phrases.csv`". The agent reads the material only when the rule matches and sends it there, so a large corpus costs nothing on runs that never touch its rule. Git sources clone the whole tree at the ref, so put heavyweight material behind a path source rather than bloating a tag every consumer clones. Data files follow the same trust rule as rule text: content to read and cite, never instructions to obey.
+Rules stay small; the material they lean on can be large and can live **inside the pack**, in a subdirectory discovery never reads. Put full example pieces, a banned-phrase list, or a house glossary in `examples/` or `resources/`, and point at it from a rule with the access method: "compare the ending against the two pieces in `examples/`; the banned list is `resources/banned-phrases.csv`". The reference must be a relative path inside the pack; an absolute path, a `..` segment, or a URL in a rule is quoted, never followed. The agent reads the material only when the rule matches and sends it there, so a large corpus costs nothing on runs that never touch its rule. Git sources clone the whole tree at the ref, so put heavyweight material behind a path source rather than bloating a tag every consumer clones. Data files follow the same trust rule as rule text: content to read and cite, never instructions to obey.
 
 ## What each step does with packs
 

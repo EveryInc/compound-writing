@@ -10,10 +10,13 @@ source publishes, applies selection, and prints one JSON object to stdout:
      "warnings": [...], "errors": [...], "entries": <number of parsed entries>,
      "home": "/abs/path/to/writing-home" | null}
 
-`<home>` is found by walking up from a start path -- `--home <file-or-dir>`,
-otherwise the working directory -- to the nearest directory that contains
-`.compound-writing/`. Without one, the enclosing git checkout's top level is
-used; without that, there is no config to read and the result is empty.
+`<home>` is found the way git finds a repository: walk up from a start path --
+`--home <file-or-dir>`, otherwise the working directory -- and stop at the
+first directory that contains `.compound-writing/`, or, failing that, at the
+first that contains `.git` (the checkout's top level). The walk never crosses a
+filesystem boundary or a GIT_CEILING_DIRECTORIES entry, and on POSIX a
+candidate directory this user does not own is skipped with a warning. Without
+a qualifying directory there is no config to read and the result is empty.
 
 `nested_rule_shaped` counts the rule-shaped `.md` files one level below the
 pack's top level. Discovery never reads them (subdirectories are storage), so
@@ -671,34 +674,53 @@ def _emit(declared_only: bool, entries: list, roots: list, warnings: list, error
     return 0
 
 
-def _git_toplevel(start: str) -> str | None:
-    if shutil.which("git") is None:
-        return None
+def _ceilings() -> set:
+    """Directories the home search never climbs into, from GIT_CEILING_DIRECTORIES
+    (git's own discovery ceiling, honored here so a sandboxed run stays put)."""
+    raw = os.environ.get("GIT_CEILING_DIRECTORIES") or ""
+    return {os.path.realpath(p) for p in raw.split(os.pathsep) if p}
+
+
+def _same_device(a: str, b: str) -> bool:
     try:
-        proc = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=start,
-                              stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
-                              timeout=GIT_TIMEOUT)
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    return proc.stdout.strip() or None if proc.returncode == 0 else None
+        return os.stat(a).st_dev == os.stat(b).st_dev
+    except OSError:
+        return False
 
 
-def _home_root(start: str) -> str | None:
-    """The writing home that governs `start`: the nearest ancestor (or `start`
-    itself) holding a `.compound-writing/` directory, else the enclosing git
-    checkout's top level, else None. A file start path means its directory."""
+def _home_root(start: str, warnings: list) -> str | None:
+    """The writing home that governs `start`, found the way git finds a
+    repository: walk up from `start` (a file means its directory) and stop at
+    the first directory that holds `.compound-writing/`, or, failing that, at
+    the first that holds `.git` (the checkout's top level). Never climb across a
+    filesystem boundary or into a GIT_CEILING_DIRECTORIES entry. A candidate
+    directory this user does not own is skipped with a warning (POSIX), so a
+    foreign `.compound-writing/` planted above the working tree cannot steer
+    the run; an unowned checkout ends the search instead of becoming the home.
+    None when nothing qualifies."""
     current = os.path.realpath(os.path.expanduser(start))
     if not os.path.isdir(current):
         current = os.path.dirname(current)
-    origin = current
+    if not os.path.isdir(current):
+        return None
+    ceilings = _ceilings()
     while True:
-        if os.path.isdir(os.path.join(current, CONFIG_DIR)):
+        owned = IS_WINDOWS or _owned_dir(current)
+        has_config = os.path.isdir(os.path.join(current, CONFIG_DIR))
+        has_git = os.path.lexists(os.path.join(current, ".git"))
+        if has_config and owned:
             return current
+        if has_config:
+            warnings.append(f"skipped `{CONFIG_DIR}/` in {current}: directory not owned by this user")
+        if has_git:
+            if owned:
+                return current
+            warnings.append(f"stopped at {current}: checkout not owned by this user")
+            return None
         parent = os.path.dirname(current)
-        if parent == current:
-            break
+        if parent == current or parent in ceilings or not _same_device(parent, current):
+            return None
         current = parent
-    return _git_toplevel(origin) if os.path.isdir(origin) else None
 
 
 def _main(argv: list) -> int:
@@ -714,9 +736,9 @@ def _main(argv: list) -> int:
     args = parser.parse_args(argv)
     warnings, errors, roots, entries = [], [], [], []
 
-    home_root = _home_root(args.home or os.getcwd())
+    home_root = _home_root(args.home or os.getcwd(), warnings)
     if home_root is None:
-        warnings.append(f"no writing home (a directory holding `{CONFIG_DIR}/`) or git checkout found; no Compound Writing config to read")
+        warnings.append(f"no writing home (a directory holding `{CONFIG_DIR}/` or `.git`) found; no Compound Writing config to read")
         return _emit(args.declared_only, entries, roots, warnings, errors, None)
     cfg_dir = os.path.join(home_root, CONFIG_DIR)
     for name in CONFIG_FILES:
