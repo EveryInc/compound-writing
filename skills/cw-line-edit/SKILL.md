@@ -101,4 +101,5 @@ When writer is satisfied, offer to move to **Final Pass**: "Ready for a final pa
 
 ## Lessons
 
-[Skill-specific lessons will be added here as they're captured]
+- A pack rule that tells this step how to edit changes what it does at a site, not which sites it finds. Measured against one house editor's recorded edits (kate bench, September 2026): rules and pack-authority changes cited on most paragraphs raised KEEP abstention from 0.47 to 0.73 and cut edits at no editor site by a third, while recall of the editor's exact edits stayed within one of sixty. Expect a house pack to make this step edit less and more precisely; do not expect it to make the step find more.
+- Read the whole draft before editing any paragraph of it. The same measurement gave the step three paragraphs of context in one arm and the whole document in another: names, product casing, tense, and referents from the rest of the piece were worth five of sixty of the editor's edits, more than any rule in the round. A paragraph-at-a-time integration that withholds the draft costs recall no rule recovers. Details: `docs/learnings/2026-09-11-kate-bench-pack-integration.md`.
