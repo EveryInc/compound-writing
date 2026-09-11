@@ -40,6 +40,12 @@ class PacksCheckTests(unittest.TestCase):
         self.assertEqual(out["checks_loaded"], 1)
         self.assertTrue(any("bad pattern" in w for w in out["warnings"]))
 
+    def test_noop_replacement_is_not_a_finding(self):
+        # A pattern that also matches correct copy must not report the correct copy.
+        self.write("dash.json", json.dumps([{"id": "dash", "pattern": r"(\S) ?\u2014 ?(\S)", "replace": "\\1\u2014\\2"}]))
+        out, _ = run(self.tmp, "closed\u2014dash and spaced \u2014 dash")
+        self.assertEqual([(f["before"], f["after"]) for f in out["findings"]], [("d \u2014 d", "d\u2014d")])
+
     def test_pack_without_checks_yields_nothing(self):
         os.rmdir(os.path.join(self.tmp, "checks"))
         out, code = run(self.tmp, "anything")

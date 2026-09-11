@@ -101,6 +101,10 @@ def run_checks(text: str, checks) -> list[dict]:
                     after = m.expand(item["replace"])
                 except (re.error, IndexError):
                     after = None
+                # A replacement that reproduces the match is not a violation; a pattern
+                # loose enough to match correct copy must not surface as evidence.
+                if after == m.group(0):
+                    continue
             findings.append({
                 "pack": pack_id, "check": file_name, "id": item["id"],
                 "start": m.start(), "end": m.end(), "before": m.group(0),
