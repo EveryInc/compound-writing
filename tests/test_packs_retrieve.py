@@ -25,20 +25,23 @@ class PacksRetrieveTests(unittest.TestCase):
             for item in items:
                 fh.write(json.dumps(item) + "\n")
 
-    def test_changed_token_outranks_topic_overlap(self):
+    def test_shared_changed_token_wins_and_topic_overlap_counts_for_nothing(self):
         self.write("moves.jsonl", [
             {"before": "The model is actually quite fast.", "after": "The model is quite fast.", "type": "insert_delete"},
             {"before": "The model shipped on Tuesday to great fanfare.", "after": "The model shipped on Tuesday to fanfare.", "type": "insert_delete"},
+            {"before": "Our new model is the fastest one yet, they said.", "after": "Our new model is the fastest yet, they said.", "type": "insert_delete"},
         ])
-        out, code = run(self.tmp, "Our new model is actually the fastest one yet.")
+        out, code = run(self.tmp, "Our new model is actually the fastest thing yet.")
         self.assertEqual(code, 0)
-        self.assertEqual(out["examples_loaded"], 2)
-        self.assertEqual(out["examples"][0]["before"], "The model is actually quite fast.")
+        self.assertEqual(out["examples_loaded"], 3)
+        # "actually" was the whole change in the first example; the third shares the
+        # topic words but the editor changed "one", which the paragraph lacks.
+        self.assertEqual([e["before"] for e in out["examples"]], ["The model is actually quite fast."])
         self.assertEqual(set(out["examples"][0]), {"pack", "file", "before", "after", "type", "note", "score"})
 
-    def test_no_shared_tokens_returns_nothing(self):
+    def test_no_shared_changed_token_returns_nothing(self):
         self.write("moves.jsonl", [{"before": "Zebras graze.", "after": "Zebras graze quietly."}])
-        out, _ = run(self.tmp, "Quarterly revenue rose.")
+        out, _ = run(self.tmp, "Zebras graze in the quarterly revenue report.")
         self.assertEqual(out["examples"], [])
 
     def test_malformed_line_is_a_warning_and_k_caps_results(self):

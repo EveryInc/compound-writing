@@ -9,10 +9,12 @@ line::
 
 ``examples/`` is storage: the step never reads it whole. This script scores
 every example against the paragraph in front of the step and returns the top
-``--k``. Scoring is lexical and deterministic: a token the paragraph shares
-with an example's ``before`` counts by its rarity across the store, and counts
-three times more when the editor *changed* that token in the example (so a
-paragraph containing "actually" finds the examples where "actually" was cut).
+``--k``. Scoring is lexical, deterministic, and by fault rather than topic: only
+tokens the paragraph shares with what the editor *changed* in an example count,
+weighted by their rarity across the store and most when they are the whole of
+the change (so a paragraph containing "actually" finds the sentences where
+"actually" alone was cut, ahead of rewrites that happened to touch it, and a
+paragraph about the same product finds nothing on that account).
 
 The step treats a retrieved example as evidence of how the editor handled a
 similar sentence, cites it as ``(pack: <id>, examples/<file>)``, and still
@@ -40,7 +42,6 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOKEN = re.compile(r"[a-z0-9][a-z0-9'’-]*|[—–…;:]")
-CHANGED_WEIGHT = 3.0
 
 
 def resolve_roots(home: str) -> tuple[list[dict], list[str]]:
@@ -116,16 +117,13 @@ def rank(text: str, examples: list[dict], k: int) -> list[dict]:
     para = set(tokens(text))
     scored = []
     for ex in examples:
-        shared = para & ex["_tokens"]
-        # A candidate shares a token the editor changed, or at least two tokens.
-        if not (shared & ex["_changed"]) and len(shared) < 2:
+        # Only tokens the editor changed count: retrieval is by fault, not by topic.
+        shared = para & ex["_changed"]
+        if not shared:
             continue
-        score = 0.0
-        for t in shared:
-            idf = math.log((n + 1) / (df[t] + 1)) + 0.1
-            score += idf * (CHANGED_WEIGHT if t in ex["_changed"] else 1.0)
-        # Long examples share tokens by chance; scale by the example's length.
-        score /= math.sqrt(len(ex["_tokens"]) or 1)
+        # Score the share of the editor's change that is present in the paragraph, so a
+        # one-word cut whose word is here outranks a rewrite that happens to touch it.
+        score = sum(math.log((n + 1) / (df[t] + 1)) + 0.1 for t in shared) / len(ex["_changed"])
         scored.append((score, ex))
     scored.sort(key=lambda s: (-s[0], s[1]["before"]))
     picked, seen = [], set()
