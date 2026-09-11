@@ -58,6 +58,7 @@ Run the declared packs' deterministic checks over the paragraph first (`packs-ch
 
 For each paragraph, ask the declared packs for their nearest before/after examples (`packs-retrieve.py`, per the contract). Each pair shows how the house's editor handled a sentence that shares a fault-bearing word with this one; make the same move only where the same fault is present, and cite it as `(pack: <id>, examples/<file>)`. Examples show the size of the editor's moves as well as their kind: match it.
 
+Where a matching pack rule addresses an item under "What to Check" above, apply that item as the rule states it, not as the default list does: a house that keeps its hedges, passives, or long sentences has decided those are not errors, and the rule narrows the check to the cases it names. Decide KEEP or EDIT for each paragraph before editing when a matching rule asks for that decision, and record the paragraphs left unchanged as decisions, not omissions.
 
 ### Meaning And Provenance
 - Preserve the scope and certainty of factual claims.
