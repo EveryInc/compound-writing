@@ -56,6 +56,8 @@ Revise against the declared Compound Pack rules whose `applies_when` matches sen
 
 Run the declared packs' deterministic checks over the paragraph first (`packs-check.py`, per the contract) and apply each finding unless its span is quoted speech, code, a UI string, or a headline; cite it as `(pack: <id>, checks/<file>#<check id>)`. Mechanical house style is found by the pack's patterns and judged by you, not searched for by eye.
 
+For each paragraph, ask the declared packs for their nearest before/after examples (`packs-retrieve.py`, per the contract). Each pair shows how the house's editor handled a sentence that shares a fault-bearing word with this one; make the same move only where the same fault is present, and cite it as `(pack: <id>, examples/<file>)`. Examples show the size of the editor's moves as well as their kind: match it.
+
 
 ### Meaning And Provenance
 - Preserve the scope and certainty of factual claims.
