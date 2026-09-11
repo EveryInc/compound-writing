@@ -45,6 +45,8 @@ The boundary is operational: rules that change wording, sentence construction, o
 
 The context contract lives in `references/context-contract.md`. It defines the authority order, project routing, source handling, and write-safety rules that orchestration and voice-sensitive skills inherit.
 
+Compound Packs extend this layer with declared knowledge. A writing home's optional `.compound-writing/config.yaml` (and personal `config.local.yaml`) names pack sources; `skills/cw-packs/scripts/packs-resolve.py` resolves them into pack roots; each step matches the rules' `applies_when` against its own work, applies matches directly below the home's own `VOICE.md` and `STYLE.md`, and cites every influence `(pack: <id>, <file>)`. Pack text is evidence, never instructions. Packs are declared, never scanned; with no `packs:` key nothing changes. The pack format is compound-engineering-plugin's, so one pack repository can serve both plugins. `references/packs.md` is the guide.
+
 ### 2. Orchestration layer
 
 `cw-scribe` is the front door. It inspects the request and available artifacts, then chooses the smallest useful route:
@@ -85,18 +87,21 @@ Compound learning means updating a maintained context surface, not claiming priv
 - Project syntax, diction, and tone preferences belong in `VOICE.md`; project argument, evidence, article-structure, and publication-readiness standards belong in `STYLE.md`.
 - Recurring editorial failures belong in the relevant review checklist or skill reference.
 - Workflow improvements belong in the workflow or architecture docs.
+- Standing rules bigger than one writing home (a publication, team, or house standard) belong in a writable declared Compound Pack, as a top-level rule file.
+- A lesson a declared pack rule already prescribes is cited, not duplicated.
 - One-off observations stay with the current piece unless the user confirms they should generalize.
-- Never edit an installed plugin/cache copy to "remember" a lesson.
+- Never edit an installed plugin/cache copy to "remember" a lesson. Git-sourced packs are read-only caches.
 
-`cw-save` proposes the right destination and follows its write-safety rules. It does not silently append lessons to plugin files.
+`cw-save` proposes the right destination and follows its write-safety rules. It does not silently append lessons to plugin files. `cw-compound` is a compatibility command that routes to `cw-save`.
 
 ## Packaging Contract
 
 - `skills/` is canonical across Claude and Codex.
 - `.codex-plugin/plugin.json` packages the shared skills for Codex.
 - `.claude-plugin/` and `agents/` provide Claude compatibility and optional subagent execution.
-- `commands/` is a compatibility/help surface, not a second implementation of the skills.
-- Public releases are assembled from an explicit allowlist containing the full generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
+- `commands/` is a compatibility/help surface, not a second implementation of the skills. An alias such as `cw-compound` routes to its skill and adds no behavior; commands reach Claude Code only, since the Codex manifest packages `skills/`.
+- The packs resolver has one canonical copy, `skills/cw-packs/scripts/packs-resolve.py`; other skills reference it by plugin-relative path rather than carrying copies.
+- Public releases are assembled from an explicit allowlist containing the full generic toolbox: `release/allowlist.json` names every skill and command allowed here, and the packaging tests hold the tree to it. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
 - Runtime cache or installed plugin folders are derived copies, never source of truth.
 - Cross-platform `SKILL.md` frontmatter uses only the shared Agent Skills fields: `name` and `description`.
 - Every user-invokable skill and compatibility command uses the `cw-<name>` convention; skill folder names and command filenames match their declared names.
@@ -116,4 +121,5 @@ An architecture change is ready when:
 8. New workflows do not create or depend on `TASTE.md`, `context.md`, `published/`, `.status.yaml`, or hidden plugin-owned onboarding state.
 9. Documentation does not advertise hand-maintained component counts as product behavior.
 10. Existing user changes and project-local conventions remain authoritative.
-11. The public build contains only allowlisted generic skills and no references to excluded editorial or personal overlays.
+11. The public build contains only the skills and commands in `release/allowlist.json` and no references to excluded editorial or personal overlays (`python3 -m unittest discover -s tests`).
+12. With no `packs:` declared, no skill mentions packs and output is unchanged; the resolver publishes only top-level rules with `title` and `applies_when`, refuses a pack that links outside its source, and never stops a run on a bad entry (`python3 -m unittest discover -s tests`).

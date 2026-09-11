@@ -14,7 +14,9 @@ description: List Compound Writing workflows by the outcome they support.
 
 - `cw-setup-project` — Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`.
 - `cw-onboarding` — Begin or refresh the writing home's voice and style rules.
-- `cw-save` — Capture a confirmed preference, lesson, or workflow improvement.
+- `cw-packs` — Declare, scaffold, and check the Compound Packs a writing home loads.
+- `cw-save` — Capture a confirmed preference, lesson, or workflow improvement in the right context file or declared pack.
+- `cw-compound` — Compatibility alias for `cw-save` (Claude Code command).
 
 ## Develop The Idea
 

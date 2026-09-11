@@ -32,6 +32,8 @@ Use this classification test:
 
 Use the writing home's `VOICE.md` and `STYLE.md` as its portable context. Use an existing global voice guide when it is already the maintained authority. Tell the user where each class of guidance will live when the destination is not already obvious.
 
+When the writer names standards that belong to a publication, a team, or several writing homes rather than to them alone, offer `cw-packs` so those rules load as a Compound Pack (see `../../references/packs.md`) instead of being copied into this home's guides. Do not raise packs otherwise; onboarding with no such signal never mentions them.
+
 ## Interview
 
 Ask only what the existing context does not answer. During first-run setup, ask one to three conversational questions at a time or invite the writer to share representative samples. Useful dimensions include:

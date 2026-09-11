@@ -14,6 +14,7 @@ Turn the available material into usable prose. The goal is a complete draft the 
 Read `../../references/context-contract.md`. Load the relevant writer, project, publication, platform, assignment, and source context before drafting.
 
 - Treat maintained voice and project guides as authoritative.
+- Ground each section in the declared Compound Pack rules whose `applies_when` matches the drafting in front of you, per the contract's Compound Packs section. Honor them silently in the copy; in the handoff, cite the rules that shaped the draft `(pack: <id>, <file>)`.
 - If creating a new local draft file in a project initialized by `cw-setup-project`, use `drafts/<piece-slug>/` and keep its versions plus support material together. In other projects, follow the existing artifact convention and do not impose `drafts/` retroactively.
 - Keep factual claims attached to their sources.
 - Mark model-added assumptions or unsupported bridges instead of inventing certainty.

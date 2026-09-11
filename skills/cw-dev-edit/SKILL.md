@@ -11,6 +11,8 @@ Review a draft for big-picture issues: argument, structure, stakes, and payoff. 
 
 Read `../../references/context-contract.md` and load the relevant assignment, project, publication, source, and voice context before judging the draft.
 
+Match the declared Compound Pack rules against this edit per the contract's Compound Packs section. A structural, evidence, or readiness finding that a matching rule drives carries its citation `(pack: <id>, <file>)`; a draft that contradicts a matching rule is a finding at the severity the rule's consequence earns.
+
 Keep the writer in the loop on thesis development. Surface evidence and counterarguments that pressure the thesis, present possible moves, and do not quietly replace the core argument.
 
 ## Entry Points

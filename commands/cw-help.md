@@ -18,6 +18,7 @@ You do not need to know the setup or onboarding tools by name. Use `cw-setup-pro
 | You have | Start with |
 |---|---|
 | No writing home or useful starting context yet | `cw-scribe` |
+| House, publication, or team rules to share across homes | `cw-packs` |
 | No idea | `cw-brainstorm` |
 | A live idea | `cw-interview` |
 | Notes or source material | `cw-outline` |
@@ -36,8 +37,8 @@ The classic flow is available but optional:
 cw-brainstorm -> cw-interview -> cw-outline -> cw-draft -> cw-dev-edit -> cw-line-edit -> cw-final-pass
 ```
 
-Publication, workspace, and format standards come from the active `STYLE.md`, brief, template, or maintained workflow.
+Publication, workspace, and format standards come from the active `STYLE.md`, brief, template, or maintained workflow, or from a declared Compound Pack when they are shared beyond one home.
 
-Use `cw-save` to turn a confirmed preference or recurring lesson into maintained context.
+Use `cw-save` to turn a confirmed preference or recurring lesson into maintained context; on Claude Code, `cw-compound` is the same command under Compound Engineering's name. Use `cw-packs` to declare, scaffold, or check the Compound Packs a writing home loads; every step cites the pack rules it applies as `(pack: <id>, <file>)`.
 
 Ask "Show me the Compound Writing toolbox" for the complete tool catalog and one-line descriptions.

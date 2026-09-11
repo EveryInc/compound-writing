@@ -11,6 +11,8 @@ The final quality check before publishing. This is the last look before it ships
 
 Read `../../references/context-contract.md` and load the relevant project, publication, platform, source, and destination requirements before judging readiness.
 
+Match the declared Compound Pack rules against the readiness judgment per the contract's Compound Packs section. A piece that contradicts a matching rule cannot be `Ready`; list the issue with its citation `(pack: <id>, <file>)` so the writer can trace the standard. Name the pack rules the verdict relied on.
+
 Do not interpret a passing verdict as permission to publish, send, schedule, or move files.
 
 ## What to Check

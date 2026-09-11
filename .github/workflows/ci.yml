@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      # Pinned so a new upstream validation rule cannot break CI without a repo
+      # change; bump deliberately. Same pin compound-engineering-plugin uses.
+      CLAUDE_CODE_VERSION: 2.1.220
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -v
+
+      # The npm package is a small wrapper whose postinstall fetches a large
+      # platform binary; caching on the pinned version makes every run between
+      # bumps a cache hit.
+      - name: Cache claude-code validator
+        id: cache-claude-code
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm-global
+          key: claude-code-${{ runner.os }}-${{ env.CLAUDE_CODE_VERSION }}
+
+      - name: Install claude-code validator
+        if: steps.cache-claude-code.outputs.cache-hit != 'true'
+        run: npm install -g --prefix ~/.npm-global @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
+
+      # `validate .` checks the marketplace catalog; the plugin manifest must be
+      # named explicitly to be checked too.
+      - name: Validate plugin manifests
+        run: |
+          export PATH="$HOME/.npm-global/bin:$PATH"
+          claude --version
+          claude plugin validate --strict .
+          claude plugin validate --strict .claude-plugin/plugin.json

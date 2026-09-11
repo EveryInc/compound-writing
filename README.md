@@ -16,6 +16,7 @@ The system:
 - keeps syntax, diction, and tone in `VOICE.md` while routing argument, evidence, article structure, substantive standards, and publication readiness to `STYLE.md`;
 - preserves existing workspaces and active drafts rather than imposing the scaffold retroactively;
 - follows repository, global, project, assignment, and voice context in authority order;
+- loads shared publication, team, or house rules from declared Compound Packs and cites every rule it applies;
 - routes from the user's outcome instead of forcing a seven-stage pipeline;
 - treats source provenance as part of writing rather than cleanup at the end;
 - saves durable learning into maintained context, style guides, checklists, or workflows;
@@ -48,11 +49,24 @@ A rule that changes wording, sentence construction, or tone goes in `VOICE.md`. 
 
 The setup workflow never creates the writing home inside the plugin or overwrites an existing file. It resolves the target first. Existing workspaces keep their own conventions unless the user explicitly asks to add or migrate the scaffold.
 
+### Compound Packs
+
+Rules that belong to a publication, a team, or several writing homes travel as **Compound Packs**: folders of Markdown rules, each with `title` and `applies_when` frontmatter, declared in the home's optional `.compound-writing/config.yaml`. Every step that loads context reads the rules that match its work and cites them `(pack: <id>, <file>)`; `cw-save` recognizes a lesson a pack already prescribes instead of duplicating it. The default scaffold does not create the config and nothing happens until a `packs:` entry exists; `cw-packs` writes the file when you declare or scaffold a pack, `cw-setup-project --with-packs` writes it with a new home, and `.compound-writing/config.example.yaml` in this repository is the same template. The format is shared with [compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin), so one pack repository can serve both. See [references/packs.md](references/packs.md).
+
+```yaml
+# writing-home/.compound-writing/config.yaml
+packs:
+  - source: compound-packs/house-style
+  - source: https://github.com/org/writing-packs
+    ref: v1.2.0
+```
+
 ### Outcome map
 
 | Outcome | Skills |
 |---|---|
 | Establish a writing home on first use | `cw-scribe` -> `cw-setup-project` -> `cw-onboarding` |
+| Share house, publication, or team rules across homes | `cw-packs` |
 | Find or develop the idea | `cw-brainstorm`, `cw-interview` |
 | Sharpen the point and reader promise | `cw-thesis`, `cw-promise`, `cw-outline` |
 | Produce prose | `cw-draft` |
@@ -81,7 +95,8 @@ It is a map, not a gate.
 | `cw-setup-project` | Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`. |
 | `cw-onboarding` | Begin or refresh the writing home's voice and style rules. |
 | `cw-scribe` | Choose and compose the smallest useful workflow for an open-ended request. |
-| `cw-save` | Turn a confirmed preference or lesson into durable project context. |
+| `cw-save` | Turn a confirmed preference or lesson into durable project context or a declared pack. `cw-compound` is a Claude Code compatibility alias; Codex packages skills only. |
+| `cw-packs` | Declare, scaffold, and check the Compound Packs a writing home loads. |
 
 ### Develop The Idea
 
@@ -127,7 +142,7 @@ It is a map, not a gate.
 | `cw-sorkin` | Review pacing, momentum, and forward motion. |
 | `cw-vonnegut` | Apply story fundamentals: wants, stakes, character, and purposeful sentences. |
 
-Publication, project, and format standards belong in the active project's `STYLE.md`, brief, or maintained workflow rather than in hard-coded publication-specific skills.
+Publication, project, and format standards belong in the active project's `STYLE.md`, brief, or maintained workflow, or in a declared Compound Pack when they are shared beyond one home, rather than in hard-coded publication-specific skills.
 
 ## Context And Learning
 
@@ -137,12 +152,13 @@ Compound Writing loads context in this order:
 2. Repository or workspace instructions.
 3. Global identity, preference, rule, and voice files named by those instructions.
 4. Active writing-home or project `VOICE.md`, `STYLE.md`, brief, template, workflow, or checklist.
-5. Relevant curated examples from its `examples/` folder.
-6. Assignment notes, sources, research, outline, draft, and destination requirements.
-7. A legacy `TASTE.md`, only when the project still maintains it.
-8. Plugin defaults for unresolved gaps only.
+5. Rules from the home's declared Compound Packs whose `applies_when` matches the current work.
+6. Relevant curated examples from its `examples/` folder.
+7. Assignment notes, sources, research, outline, draft, and destination requirements.
+8. A legacy `TASTE.md`, only when the project still maintains it.
+9. Plugin defaults for unresolved gaps only.
 
-`cw-save` routes confirmed syntax, diction, and tone learning to `VOICE.md`; it routes argument, evidence, article-structure, and publication-readiness learning to `STYLE.md`. It does not silently edit an installed plugin, create hidden onboarding state, or claim private memory.
+`cw-save` routes confirmed syntax, diction, and tone learning to `VOICE.md`; it routes argument, evidence, article-structure, and publication-readiness learning to `STYLE.md`. It checks the declared packs first, cites a rule that already prescribes the lesson instead of duplicating it, and offers a writable pack for a standing rule bigger than one home. It does not silently edit an installed plugin, create hidden onboarding state, or claim private memory.
 
 ## Repository Layout
 
@@ -153,15 +169,17 @@ compound-writing/
 ├── agents/              # Claude subagent adapters for panels and specialist work
 ├── commands/            # Claude compatibility/help surfaces
 ├── defaults/            # Optional fallback templates
-├── references/          # Shared architecture and context contracts
+├── references/          # Shared architecture, context, and packs contracts
+├── release/             # allowlist.json: the skills and commands the public package ships
 ├── skills/              # Canonical cross-runtime workflows
+├── tests/               # Resolver and packaging tests (python3 -m unittest discover -s tests)
 ├── ARCHITECTURE.md
 └── README.md
 ```
 
 `skills/` is the source of truth for writing behavior. Installed plugin directories and caches are derived runtime copies.
 
-Public releases are built from an explicit generic-skill allowlist. Internal or publication-specific extensions are not included in the published package.
+Public releases are built from an explicit generic-skill allowlist, `release/allowlist.json`: the skills and commands allowed to ship here. `tests/test_packaging.py` fails when `skills/` or `commands/` and that list disagree, so adding to the public package is a deliberate edit. Internal or publication-specific extensions are not included in the published package.
 
 ## Installation
 
