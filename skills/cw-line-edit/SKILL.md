@@ -54,6 +54,9 @@ Check the prose against the active writer and project voice sources. Do not make
 
 Revise against the declared Compound Pack rules whose `applies_when` matches sentence-level work, per the contract's Compound Packs section. In the summary of changes, cite the rule behind a change it drove `(pack: <id>, <file>)`; the home's own `VOICE.md` wins on a direct conflict, and you name the conflict.
 
+Run the declared packs' deterministic checks over the paragraph first (`packs-check.py`, per the contract) and apply each finding unless its span is quoted speech, code, a UI string, or a headline; cite it as `(pack: <id>, checks/<file>#<check id>)`. Mechanical house style is found by the pack's patterns and judged by you, not searched for by eye.
+
+
 ### Meaning And Provenance
 - Preserve the scope and certainty of factual claims.
 - Do not sever citations or source attribution from the claims they support.
