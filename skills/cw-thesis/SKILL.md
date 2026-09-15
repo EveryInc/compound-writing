@@ -9,6 +9,8 @@ description: Generate 3 thesis options tailored to your content. Invoke with /cw
 
 Generate 3 thesis options that crystallize the core insight of the piece.
 
+Read `../../references/context-contract.md` and resolve available audience context, including optional `AUDIENCE.md` or a named shared guide. The explicit assignment audience takes precedence; missing audience context does not block the task.
+
 ## Invocation
 
 - `/cw-thesis [context]` — Generate theses for the specified topic/piece

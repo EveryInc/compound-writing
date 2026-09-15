@@ -15,7 +15,9 @@ Read `../../references/context-contract.md` and use the explicit request, brief,
 
 Use that context only to establish who the reader is and what the piece is trying to do. Judge the copy based on what appears on the page.
 
-If no audience is named, read as an intelligent, interested first-time reader with no specialist knowledge beyond what the copy signals.
+Use an optional `AUDIENCE.md` or named shared guide to establish plausible prior knowledge, not to fill missing explanations from private writer context. The explicit assignment audience takes precedence.
+
+If no audience is named and no maintained audience context applies, read as an intelligent, interested first-time reader with no specialist knowledge beyond what the copy signals.
 
 Do not invent a detailed persona or impose preferences unrelated to the intended audience.
 

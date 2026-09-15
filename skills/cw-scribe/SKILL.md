@@ -22,6 +22,8 @@ Do not create files until the destination is explicit or safely resolved from th
 
 Treat `TASTE.md`, `context.md`, `published/`, and `.status.yaml` as legacy or workspace-specific surfaces, not requirements.
 
+Load the optional `AUDIENCE.md` or shared audience guide named by project instructions when the task depends on reader context. The assignment's explicit audience wins over shared defaults. Missing audience guidance does not trigger setup or block work. Route an explicit request to establish audience context to `cw-onboarding`; do not add a local guide when a shared source already serves it.
+
 ## Route By Outcome
 
 Choose the smallest route that fits the request:
@@ -30,6 +32,7 @@ Choose the smallest route that fits the request:
 |---|---|
 | First meaningful interaction with no writing home or useful artifact | Brief orientation, resolve the target, `cw-setup-project`, then `cw-onboarding` |
 | Explicitly asks for another self-contained writing folder | `cw-setup-project`, then optional `cw-onboarding` |
+| Wants to establish or refresh audience context | `cw-onboarding`, reusing the governing audience source |
 | No idea yet | `cw-brainstorm` |
 | Has a live idea and needs material | `cw-interview` |
 | Needs the point or reader promise sharpened | `cw-thesis`, `cw-promise` |

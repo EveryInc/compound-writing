@@ -101,9 +101,9 @@ Possible response: [How you might address this—or note if you can't]
 - **Objections aren't attacks** — This skill thinks like a skeptic who wants to be convinced, not a hater
 - **Some objections reveal scope** — An objection might mean you need to narrow your claim, not defend it
 
-## The Difference from /cw-asshole
+## The Difference from /cw-nemesis
 
-- `/cw-asshole` attacks the writing itself—the craft, clarity, voice, and execution
+- `/cw-nemesis` attacks the writing itself—the craft, clarity, voice, and execution
 - `/cw-objections` attacks the argument—the claims, logic, evidence, and reasoning
 
 Both find weaknesses. They just look in different places.

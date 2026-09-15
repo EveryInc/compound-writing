@@ -154,7 +154,7 @@ Debate is most valuable when the panel includes natural tensions:
 | mom + hemingway | Accessibility vs. Brevity | Deciding what a non-expert audience needs explained |
 | sorkin + sedaris | Momentum vs. Observation | Pacing of descriptive passages |
 | sorkin + vonnegut | Speed vs. Depth | When to slow for character |
-| asshole + sedaris | Rigor vs. Voice | Tone of argument pieces |
+| nemesis + sedaris | Rigor vs. Voice | Tone of argument pieces |
 
 **Recommendation:** Include at least one natural tension pair in your panel.
 

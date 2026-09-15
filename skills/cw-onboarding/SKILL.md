@@ -1,6 +1,6 @@
 ---
 name: cw-onboarding
-description: Begin or refresh the separate VOICE.md and STYLE.md guides in a writer's durable writing home from a short conversation, existing writing, or maintained context. Use during first-run writing-home setup and when the user wants to define, calibrate, import, or update voice and style rules.
+description: Begin or refresh the separate VOICE.md, STYLE.md, and optional AUDIENCE.md guides in a writer's durable writing home from a short conversation, existing writing, or maintained context. Use during first-run writing-home setup and when the user wants to define, calibrate, import, or update voice, style, or audience context.
 ---
 
 # Onboarding
@@ -17,20 +17,30 @@ Read `../../references/context-contract.md`. Inspect the current workspace for m
 - Do not duplicate global guidance into the writing home unless a local override is needed.
 - Do not overwrite an existing profile without explicit approval.
 
-## Keep Two Destinations
+## Keep The Destinations Distinct
 
 Route each rule by what it governs:
 
 - `VOICE.md` answers **How should the sentences sound?** Put syntax, diction, and tone here, including cadence, rhythm, register, punctuation, verbal tics, sentence moves, and phrases to favor or avoid.
 - `STYLE.md` answers **What must the article do, contain, and prove?** Put argument, evidence, article structure, substantive standards, audience promise, openings, endings, formats, and publication-readiness criteria here.
 
+- Optional `AUDIENCE.md` answers **Who are we writing for, and what may engage them?** Put reader situations, prior knowledge, wants, interests, resistance, and source evidence here. Follow a maintained shared source named by the project; do not create a local duplicate.
+
 Use this classification test:
 
 - A rule that changes wording, sentence construction, or tone belongs in `VOICE.md`.
 - A rule that changes the claim, support, organization, or readiness standard of the article belongs in `STYLE.md`.
-- Feedback that changes both must become two atomic rules. Do not copy the combined instruction into both files.
+- Reader knowledge belongs in the governing `AUDIENCE.md`; the writing's obligations to that reader remain in `STYLE.md`. Split mixed feedback without duplicating it across guides.
 
 Use the writing home's `VOICE.md` and `STYLE.md` as its portable context. Use an existing global voice guide when it is already the maintained authority. Tell the user where each class of guidance will live when the destination is not already obvious.
+
+## Begin Or Refresh Audience Context
+
+When the user requests audience setup or calibration, resolve the audience source through the context contract. Use an existing shared guide when named; otherwise create `AUDIENCE.md` in the established writing home if useful. The optional starter is `defaults/project-template/AUDIENCE.md` relative to the plugin root. Missing audience context never blocks the immediate writing task or triggers onboarding by itself.
+
+Start with known situations, knowledge, interests, and resistance. Ask only consequential gaps. Label reader evidence, positioning, explicit writer intent, and editorial hypotheses; keep source, date, and scope. Do not invent a demographic profile, assume personal stakes, or turn a publication's intended relationship into measured reader behavior. The assignment can select a narrower reader without changing the shared guide.
+
+Make the guide legible to both the writer and the agent: begin with a short reader portrait, distinguish wants (outcomes or experiences sought) from needs (what may help the reader get there), and connect them to what the writing can offer. Include a possible hero's journey when useful: starting situation, call, obstacles, guidance, trials, and what the reader carries back. Label it as an editorial model unless supported by reader evidence; do not force a transformation story or invent motives to fill its stages. Close with concise instructions for applying the guide to a piece, with sources and uncertainties easy to find.
 
 ## Interview
 
@@ -63,7 +73,7 @@ The resulting `VOICE.md` should normally cover:
 - humor, self-awareness, or verbal tics when they are evidenced in the samples;
 - practical revision instructions that help an agent align a draft without imitating the examples.
 
-Do **not** put curiosity, intellectual rigor, uncertainty, point of view, reader relationship, argument, evidence, structure, or publication standards in this profile unless the instruction changes the wording, syntax, cadence, or tone of a sentence. Route those concerns to the active project's `STYLE.md`, brief, or source material.
+Do **not** put curiosity, intellectual rigor, uncertainty, point of view, reader relationship, argument, evidence, structure, or publication standards in this profile unless the instruction changes the wording, syntax, cadence, or tone of a sentence. Route article standards to `STYLE.md` or the brief, and durable reader knowledge to the resolved `AUDIENCE.md` when one is maintained.
 
 For every material voice rule, attach either a short sourced excerpt or a concise description of the observed move. Full examples belong in `examples/`; published language is directional and non-reusable. Avoid broad labels such as “warm,” “smart,” or “authentic” unless they are translated into observable writing behavior.
 
@@ -80,13 +90,13 @@ For every material voice rule, attach either a short sourced excerpt or a concis
 
 ## Migrate TASTE.md
 
-When a legacy `TASTE.md` exists, classify its rules into `VOICE.md` and `STYLE.md`. Flag mixed or conflicting rules for judgment. Do not keep adding new guidance to `TASTE.md`, and do not delete it without explicit approval.
+When a legacy `TASTE.md` exists, classify its rules into `VOICE.md`, `STYLE.md`, and an authorized audience guide when useful. Flag mixed or conflicting rules for judgment. Do not keep adding new guidance to `TASTE.md`, and do not delete it without explicit approval.
 
 ## Handoff
 
 Confirm:
 
-- what was captured in voice versus style;
-- where both files and any supporting examples were saved;
+- what was captured in voice, style, and audience context when requested;
+- where the guides and supporting examples were saved, including any shared audience source;
 - which gaps remain intentionally open;
 - how future Compound Writing skills will load the writing home.

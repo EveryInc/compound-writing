@@ -44,10 +44,17 @@ python3 "<plugin-root>/skills/cw-setup-project/scripts/create_project.py" "/path
 
 `--add-missing` creates only absent items. Preserve every existing file and convention.
 
+## Optional Audience Guide
+
+When the writer asks to establish audience context and no maintained shared guide is already named, add `--with-audience` to the creator command. For an existing writing home, combine it with `--add-missing` after inspection. This adds the generic `AUDIENCE.md` template without overwriting any existing file.
+
+If a shared audience guide already governs the work, reference that guide from project instructions instead of creating a duplicate. A local `AUDIENCE.md` is optional; do not add one or interrupt writing merely because it is missing. Use the audience resolution rules in `../../references/context-contract.md`.
+
 ## Keep The Split Clear
 
 - `VOICE.md` answers: **How should the sentences sound?** Put syntax, diction, and tone here, including cadence, rhythm, register, punctuation, and verbal tics.
 - `STYLE.md` answers: **What must the article do, contain, and prove?** Put argument, evidence, article structure, substantive standards, audience promise, and publication-readiness criteria here.
+- Optional `AUDIENCE.md` answers: **Who are we writing for, and what may engage them?** Keep reader situations, knowledge, wants, interests, resistance, and their evidence here; use a named shared guide when one exists.
 - `examples/` holds curated positive and negative examples. Examples are evidence for the written rules, not rules by themselves.
 - `drafts/` holds one folder per piece: `drafts/<piece-slug>/`. Keep that piece's notes, research, outline, draft versions, and reviews together.
 
@@ -62,7 +69,7 @@ When `TASTE.md` exists:
 1. Read it with the existing project instructions.
 2. Route syntax, diction, and tone rules to `VOICE.md`.
 3. Route argument, evidence, article structure, substantive standards, and publication-readiness rules to `STYLE.md`.
-4. Flag rules that mix both layers or conflict with maintained context.
+4. Route durable reader knowledge to a maintained `AUDIENCE.md` when requested; use an existing shared guide rather than creating a duplicate. Flag mixed or conflicting guidance.
 5. Show the migration summary before changing ambiguous or high-authority guidance.
 6. Preserve `TASTE.md` until the user explicitly approves its deletion or archival.
 
@@ -74,4 +81,4 @@ When the user invoked `cw-setup-project` manually for an additional folder, offe
 
 ## Handoff
 
-Report the writing-home path, the four created surfaces, anything skipped because it already existed, and the next useful step.
+Report the writing-home path, the created surfaces, any optional audience guide or shared source, anything skipped because it already existed, and the next useful step.

@@ -1,9 +1,9 @@
 {
   "name": "compound-writing",
-  "version": "2.3.0+codex.20260826092242",
-  "description": "A context-first writing toolbox with one durable writing home for voice, style, examples, drafts, revision, stress-testing, and publication preparation.",
+  "version": "2.4.1",
+  "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
   "author": {
-    "name": "Katie Parrott",
+    "name": "Every",
     "email": "katie@every.to",
     "url": "https://github.com/EveryInc"
   },
@@ -18,14 +18,15 @@
     "ai-native-writing",
     "style-guide",
     "voice",
-    "workflow"
+    "workflow",
+    "audience"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Compound Writing",
     "shortDescription": "A full writing toolbox with a context-aware front door",
-    "longDescription": "Compound Writing provides a full toolbox for developing ideas, drafting, revising, pressure-testing, and preparing work for publication. Scribe acts as the context-aware front door: it helps a first-time writer establish one portable writing home when needed, or starts directly from an existing draft or workspace. The system preserves source provenance, writer voice, and human ownership of consequential decisions.",
-    "developerName": "Katie Parrott",
+    "longDescription": "Compound Writing provides a full toolbox for developing ideas, drafting, revising, pressure-testing, and preparing work for publication. Scribe acts as the context-aware front door: it helps a first-time writer establish one portable writing home when needed, or starts directly from an existing draft or workspace. The system preserves source provenance, writer voice, and human ownership of consequential decisions. Optional audience context records who you write for, what they know and want, and the evidence behind those observations. A blank template helps you establish your own guide or reuse a maintained shared source.",
+    "developerName": "Every",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
@@ -33,15 +34,14 @@
       "Write"
     ],
     "websiteURL": "https://github.com/EveryInc/compound-writing",
-    "privacyPolicyURL": "https://github.com/EveryInc/compound-writing",
-    "termsOfServiceURL": "https://github.com/EveryInc/compound-writing",
     "defaultPrompt": [
-      "Help me start writing and set up the context you need.",
       "Help me develop this idea into a strong piece.",
-      "Check whether this draft buries its most important idea.",
-      "Help me choose the right tool for this draft."
+      "Help me set up an audience guide for my writing.",
+      "Review this draft for my intended readers."
     ],
     "brandColor": "#2563EB",
-    "screenshots": []
+    "screenshots": [],
+    "composerIcon": "./assets/compound-writing.png",
+    "logo": "./assets/compound-writing.png"
   }
 }

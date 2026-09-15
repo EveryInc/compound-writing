@@ -13,7 +13,7 @@ description: List Compound Writing workflows by the outcome they support.
 ## Writing Home And Context
 
 - `cw-setup-project` — Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`.
-- `cw-onboarding` — Begin or refresh the writing home's voice and style rules.
+- `cw-onboarding` — Begin or refresh voice, style, and optional audience context.
 - `cw-save` — Capture a confirmed preference, lesson, or workflow improvement.
 
 ## Develop The Idea
@@ -44,7 +44,7 @@ description: List Compound Writing workflows by the outcome they support.
 - `cw-objections` — Surface reader resistance and counterarguments.
 - `cw-panel` — Synthesize several reviewer perspectives.
 - `cw-debate` — Let reviewers challenge one another across rounds.
-- `cw-asshole` — Attack weak claims from the least charitable position.
+- `cw-nemesis` — Attack weak claims from the least charitable position.
 - `cw-hemingway` — Demand economy.
 - `cw-hitchcock` — Review suspense and tension.
 - `cw-reader` — Trace the first-time reading experience and flag confusion, missing setup, and off-putting friction.

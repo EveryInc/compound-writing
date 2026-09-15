@@ -9,6 +9,8 @@ description: Generate 3 hook options tailored to your content. Invoke with /cw-h
 
 Generate 3 hook options from the Hook Arsenal, tailored to the content at hand.
 
+Read `../../references/context-contract.md` and resolve available audience context, including optional `AUDIENCE.md` or a named shared guide. The explicit assignment audience takes precedence; missing audience context does not block the task.
+
 ## Invocation
 
 - `/cw-hook [context]` — Generate hooks for the specified topic/piece

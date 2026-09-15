@@ -4,7 +4,7 @@ Compound Writing is a context-first writing system. At a first meaningful intera
 
 ## Design Principles
 
-1. **Context before craft** — Load identity, preferences, project rules, voice, assignment context, and source material before applying a writing workflow.
+1. **Context before craft** — Load identity, preferences, project rules, voice, audience, assignment context, and source material before applying a writing workflow.
 2. **Authority before accumulation** — Prefer maintained source-of-truth files over inferred memory or plugin defaults.
 3. **Outcome routing** — Start from what the user is trying to accomplish, not from a mandatory stage sequence.
 4. **Human ownership** — Preserve the writer's thesis, voice, and judgment. The system can pressure an argument; it should not quietly replace it.
@@ -30,14 +30,17 @@ writing-home/
 
 - `VOICE.md` governs how sentences sound: syntax, diction, and tone, including cadence, register, punctuation, and verbal tics.
 - `STYLE.md` governs what an article must do, contain, and prove: argument, evidence, article structure, substantive standards, and publication readiness.
+- Optional `AUDIENCE.md` governs reader situations, knowledge, wants, interests, resistance, and the evidence behind those observations. It may be one shared guide named by several projects.
 - `examples/` holds curated positive and negative examples that clarify the written rules without replacing them.
 - `drafts/` holds one folder per piece, with that piece's notes, research, outline, versions, and reviews together.
 
 The target must be explicit or safely resolved before setup writes anything. Existing workspaces retain their own structure and authority; a live draft, useful context, or an active workspace takes precedence over onboarding. Missing scaffold files alone do not prove that setup is needed. A legacy `TASTE.md` may be migrated into the two guides, but it is not created for a new writing home and is never silently deleted.
 
+Use `--with-audience` during authorized setup to add the optional generic audience template when no maintained shared guide already serves the work. A missing `AUDIENCE.md` never triggers onboarding or blocks writing. Shared sources are linked from project instructions, not copied into each publication. The explicit assignment audience takes precedence over shared defaults.
+
 One writing home is the normal first-run mental model. Creating another self-contained folder remains an advanced, optional manual capability when the user explicitly asks for it later. Compound Writing stores no hidden onboarding flag or plugin-owned persistent state.
 
-The boundary is operational: rules that change wording, sentence construction, or tone go in `VOICE.md`; rules that change the claim, support, organization, or readiness standard go in `STYLE.md`. Mixed feedback becomes two atomic rules rather than one instruction duplicated across both files.
+The boundary is operational: rules that change wording, sentence construction, or tone go in `VOICE.md`; rules that change the claim, support, organization, or readiness standard go in `STYLE.md`. Reader knowledge belongs in the governing `AUDIENCE.md`; article obligations to that reader stay in `STYLE.md`. Split mixed guidance across its relevant destinations without duplicating it.
 
 ## Runtime Layers
 
@@ -55,7 +58,7 @@ The context contract lives in `references/context-contract.md`. It defines the a
 - **Draft** — `cw-draft` using the active `VOICE.md`, `STYLE.md`, brief, and sources
 - **Revise** — `cw-bluf` for importance and lede placement; `cw-dev-edit` for the broader structure; then `cw-line-edit` when structure is stable
 - **Validate** — `cw-ai-check`, `cw-voice-check`, `cw-final-pass`
-- **Stress-test** — `cw-reader`, `cw-objections`, `cw-asshole`, `cw-panel`, `cw-debate`, or a named lens
+- **Stress-test** — `cw-reader`, `cw-objections`, `cw-nemesis`, `cw-panel`, `cw-debate`, or a named lens
 
 The familiar brainstorm-to-final-pass sequence remains available, but it is a map rather than a gate.
 
@@ -83,6 +86,7 @@ Compound learning means updating a maintained context surface, not claiming priv
 
 - Cross-project voice preferences belong in the user's global voice guide.
 - Project syntax, diction, and tone preferences belong in `VOICE.md`; project argument, evidence, article-structure, and publication-readiness standards belong in `STYLE.md`.
+- Confirmed audience learning belongs in the governing `AUDIENCE.md`, preserving source, date, scope, and the distinction between reader evidence, positioning, and inference. A piece-specific audience assumption stays with the brief.
 - Recurring editorial failures belong in the relevant review checklist or skill reference.
 - Workflow improvements belong in the workflow or architecture docs.
 - One-off observations stay with the current piece unless the user confirms they should generalize.
@@ -116,4 +120,5 @@ An architecture change is ready when:
 8. New workflows do not create or depend on `TASTE.md`, `context.md`, `published/`, `.status.yaml`, or hidden plugin-owned onboarding state.
 9. Documentation does not advertise hand-maintained component counts as product behavior.
 10. Existing user changes and project-local conventions remain authoritative.
-11. The public build contains only allowlisted generic skills and no references to excluded editorial or personal overlays.
+11. Optional audience setup preserves existing files; named shared audience guides are reused; missing audience context never gates work; assignment audience overrides shared defaults.
+12. The public build contains only allowlisted generic skills and no references to excluded editorial or personal overlays.

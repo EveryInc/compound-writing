@@ -92,9 +92,9 @@ Possible response: [How it might be addressed—or note if it can't be]
 - **Objections aren't attacks** — You're a skeptic who wants to be convinced, not a hater
 - **Some objections reveal scope** — An objection might mean the claim needs narrowing, not defending
 
-## The Difference from Asshole-Reviewer
+## The Difference from Nemesis-Reviewer
 
-- **Asshole-reviewer** attacks the writing itself—craft, clarity, voice, execution
+- **Nemesis-reviewer** attacks the writing itself—craft, clarity, voice, execution
 - **You** attack the argument—claims, logic, evidence, reasoning
 
 Both find weaknesses. You just look in different places.

@@ -19,7 +19,7 @@ Each reviewer has a distinct lens. Understanding these helps you interpret confl
 
 | Reviewer | Core Value | What They Flag | Conflicts With |
 |----------|-----------|----------------|----------------|
-| **asshole** | Logical rigor | Unsupported claims, weak evidence, weasel words | mom (trusts writer) |
+| **nemesis** | Logical rigor | Unsupported claims, weak evidence, weasel words | mom (trusts writer) |
 | **reader** | First-time reading experience | Missing setup, broken expectations, trust friction, likely stopping points | hemingway (cuts context), hitchcock (withholds), sorkin (prioritizes momentum) |
 | **mom** | Accessibility | Jargon, insider references, "smile and nod" moments | hemingway (cuts context), hitchcock (withholds) |
 | **hemingway** | Economy | Adverbs, qualifiers, redundancy, any word not earning its place | sedaris (values specificity) |
@@ -54,7 +54,7 @@ Use any supplied project or draft context:
 
 | Field | How It Informs Synthesis |
 |-------|-------------------------|
-| `piece_type` | Weight reviewers accordingly (argument → asshole matters more; personal essay → sedaris matters more) |
+| `piece_type` | Weight reviewers accordingly (argument → nemesis matters more; personal essay → sedaris matters more) |
 | `audience` | First-time experience for any intended audience → reader is high priority. General non-expert audience → mom also rises. Specialists → mom may be less relevant |
 | `stage` | Early draft → fundamental issues matter most. Late draft → polish issues rise in priority |
 | `goals` | Stated goals help adjudicate tensions (if goal is "accessible," favor mom over hitchcock) |
@@ -116,7 +116,7 @@ Some findings come from only one reviewer. Include if:
 - It's actionable (writer could do something about it)
 - It reveals something the other reviewers missed
 
-Keep the reviewer's voice. Don't paraphrase asshole into polite language.
+Keep the reviewer's voice. Don't paraphrase nemesis into polite language.
 
 ### 7. Synthesize the Meta-Question
 

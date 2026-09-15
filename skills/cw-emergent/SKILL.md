@@ -83,7 +83,7 @@ When a request doesn't map to a skill:
 - "Give me a hook" → Use /cw-hook directly
 - "Does this bury the lede?" → Use /cw-bluf directly
 - "Check my voice" → Use /cw-voice-check directly
-- "Run the asshole read" → Use /cw-asshole directly
+- "Run the nemesis read" → Use /cw-nemesis directly
 
 ## The Ultimate Test
 
