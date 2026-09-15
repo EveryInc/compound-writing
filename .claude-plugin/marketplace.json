@@ -1,20 +1,20 @@
 {
   "name": "compound-writing",
   "owner": {
-    "name": "Katie Parrott",
+    "name": "Every",
     "url": "https://github.com/EveryInc"
   },
   "metadata": {
-    "description": "A full, context-first toolbox with one durable writing home for voice, style, drafts, revision, and publication readiness.",
-    "version": "2.3.0"
+    "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
+    "version": "2.4.1"
   },
   "plugins": [
     {
       "name": "compound-writing",
-      "description": "A full, context-first toolbox with one durable writing home for voice, style, drafts, revision, and publication readiness.",
-      "version": "2.3.0",
+      "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
+      "version": "2.4.1",
       "author": {
-        "name": "Katie Parrott",
+        "name": "Every",
         "email": "katie@every.to"
       },
       "tags": [

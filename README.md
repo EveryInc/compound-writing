@@ -14,6 +14,7 @@ The system:
 
 - gives a first-time writer one portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`;
 - keeps syntax, diction, and tone in `VOICE.md` while routing argument, evidence, article structure, substantive standards, and publication readiness to `STYLE.md`;
+- uses optional `AUDIENCE.md` for reader situations, knowledge, wants, interests, and resistance, including one shared source across publications;
 - preserves existing workspaces and active drafts rather than imposing the scaffold retroactively;
 - follows repository, global, project, assignment, and voice context in authority order;
 - routes from the user's outcome instead of forcing a seven-stage pipeline;
@@ -37,6 +38,7 @@ Use `cw-setup-project` directly only when you explicitly want to create or migra
 writing-home/
 ├── VOICE.md
 ├── STYLE.md
+├── AUDIENCE.md          # Optional; may instead use a shared guide
 ├── examples/
 └── drafts/
     └── piece-slug/
@@ -44,7 +46,9 @@ writing-home/
 
 `VOICE.md` answers how the sentences should sound: syntax, diction, and tone. `STYLE.md` answers what the writing must do, contain, and prove: argument, evidence, article structure, substantive standards, and publication readiness. `examples/` holds curated evidence for those rules. `drafts/` keeps each piece's notes, research, outline, versions, and reviews together.
 
-A rule that changes wording, sentence construction, or tone goes in `VOICE.md`. A rule that changes the claim, support, organization, or readiness standard goes in `STYLE.md`. Mixed feedback is split into two rules.
+`AUDIENCE.md` answers who the readers are and what may engage them. It records situations, prior knowledge, interests, resistance, and the evidence behind those observations. Several publications can name the same shared audience guide in their instructions; a piece's explicit audience takes precedence. The release includes a [blank audience template](defaults/project-template/AUDIENCE.md) with recommended categories and prompts; it contains no publication or personal reader profile. The file is optional and its absence never blocks writing. During requested setup, `--with-audience` adds the template when a shared source is not already in use.
+
+A rule that changes wording, sentence construction, or tone goes in `VOICE.md`. A rule that changes the claim, support, organization, or readiness standard goes in `STYLE.md`. Reader knowledge belongs in the governing audience guide; the writing's promises remain in `STYLE.md`. Split mixed guidance without duplicating it across files.
 
 The setup workflow never creates the writing home inside the plugin or overwrites an existing file. It resolves the target first. Existing workspaces keep their own conventions unless the user explicitly asks to add or migrate the scaffold.
 
@@ -61,7 +65,7 @@ The setup workflow never creates the writing home inside the plugin or overwrite
 | Revise sentences while preserving voice | `cw-line-edit` |
 | Remove machine residue or voice drift | `cw-ai-check`, `cw-voice-check`, `cw-tracks` |
 | See the piece through a first-time reader's eyes | `cw-reader` |
-| Pressure-test the piece | `cw-objections`, `cw-asshole`, `cw-panel`, `cw-debate`, reviewer lenses |
+| Pressure-test the piece | `cw-objections`, `cw-nemesis`, `cw-panel`, `cw-debate`, reviewer lenses |
 | Check publication readiness | `cw-final-pass` |
 
 The classic flow still works:
@@ -79,7 +83,7 @@ It is a map, not a gate.
 | Tool | Job |
 |---|---|
 | `cw-setup-project` | Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`. |
-| `cw-onboarding` | Begin or refresh the writing home's voice and style rules. |
+| `cw-onboarding` | Begin or refresh voice, style, and optional audience context. |
 | `cw-scribe` | Choose and compose the smallest useful workflow for an open-ended request. |
 | `cw-save` | Turn a confirmed preference or lesson into durable project context. |
 
@@ -118,7 +122,7 @@ It is a map, not a gate.
 | `cw-panel` | Convene several reviewer perspectives and synthesize their feedback. |
 | `cw-debate` | Let reviewers challenge one another until tensions resolve or become clear choices. |
 | `cw-emergent` | Compose a custom workflow when no single tool fits the job. |
-| `cw-asshole` | Apply the least charitable reading and attack weak claims or assumptions. |
+| `cw-nemesis` | Apply the least charitable reading and attack weak claims or assumptions. |
 | `cw-hemingway` | Cut unnecessary words and demand economy. |
 | `cw-hitchcock` | Review suspense, tension, and what the reader knows when. |
 | `cw-reader` | Trace the first-time reading experience and flag confusion, missing setup, and off-putting friction. |
@@ -136,13 +140,13 @@ Compound Writing loads context in this order:
 1. Explicit user instructions and supplied material.
 2. Repository or workspace instructions.
 3. Global identity, preference, rule, and voice files named by those instructions.
-4. Active writing-home or project `VOICE.md`, `STYLE.md`, brief, template, workflow, or checklist.
+4. Active writing-home or project `VOICE.md`, `STYLE.md`, optional `AUDIENCE.md` or named shared audience guide, brief, template, workflow, or checklist.
 5. Relevant curated examples from its `examples/` folder.
 6. Assignment notes, sources, research, outline, draft, and destination requirements.
 7. A legacy `TASTE.md`, only when the project still maintains it.
 8. Plugin defaults for unresolved gaps only.
 
-`cw-save` routes confirmed syntax, diction, and tone learning to `VOICE.md`; it routes argument, evidence, article-structure, and publication-readiness learning to `STYLE.md`. It does not silently edit an installed plugin, create hidden onboarding state, or claim private memory.
+`cw-save` routes confirmed syntax, diction, and tone learning to `VOICE.md`; it routes argument, evidence, article-structure, and publication-readiness learning to `STYLE.md`. It routes confirmed audience learning to the governing `AUDIENCE.md`, preserving source and scope. It does not silently edit an installed plugin, create hidden onboarding state, or claim private memory.
 
 ## Repository Layout
 

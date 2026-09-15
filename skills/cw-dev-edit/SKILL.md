@@ -137,7 +137,7 @@ After the report:
 - Writer can ask for specific focus ("Just look at the structure")
 - Writer can skip dev-edit entirely
 - Writer can run multiple passes
-- Can be combined with other feedback (asshole read, objections) for stress testing
+- Can be combined with other feedback (nemesis read, objections) for stress testing
 
 ## For Agents
 

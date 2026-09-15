@@ -9,6 +9,8 @@ description: Generate 3 promise options that create anticipation for what's to c
 
 Generate 3 promise options that create anticipation and launch the reader into the rest of the piece.
 
+Read `../../references/context-contract.md` and resolve available audience context, including optional `AUDIENCE.md` or a named shared guide. The explicit assignment audience takes precedence; missing audience context does not block the task.
+
 ## Invocation
 
 - `/cw-promise [context]` — Generate promises for the specified topic/piece

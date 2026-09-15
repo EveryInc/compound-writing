@@ -18,6 +18,8 @@ At the first meaningful interaction, inspect the request, supplied material, cur
 
 When no established writing context or useful artifact exists, briefly explain the benefit of one writing home, resolve the target folder, route to `cw-setup-project`, and begin `cw-onboarding` for `VOICE.md` and `STYLE.md`. Never create files before the destination is explicit or safely resolved. Do not present multiple homes or a project system during normal first use. Treat `TASTE.md`, `context.md`, `published/`, and `.status.yaml` as legacy or workspace-specific surfaces.
 
+Use the optional `AUDIENCE.md` or shared audience guide named by the project for reader context. Assignment-specific audience instructions take precedence; absence never blocks work or triggers setup. Audience calibration belongs to `cw-onboarding` when requested.
+
 ## Outcome Routes
 
 - No idea -> cw-brainstorm

@@ -1,9 +1,9 @@
 ---
-name: cw-asshole
+name: cw-nemesis
 description: Reads your writing through the meanest, least-charitable lens. Challenges every claim, questions every assumption, pokes holes in the logic. Use for later drafts when you want hard feedback.
 ---
 
-# Asshole Read
+# Nemesis Read
 
 ## Purpose
 
@@ -17,11 +17,11 @@ Use this when:
 
 ## Invocation
 
-- `/cw-asshole [text]` — Give the provided text the meanest read
-- `/cw-asshole` — System asks "What would you like me to tear apart?"
+- `/cw-nemesis [text]` — Give the provided text the meanest read
+- `/cw-nemesis` — System asks "What would you like me to tear apart?"
 - Works on selection if provided, asks if not
 
-## The Asshole Reader's Mindset
+## The Nemesis Reader's Mindset
 
 This reader:
 - Assumes you're wrong until proven otherwise
@@ -35,7 +35,7 @@ This reader:
 
 ## What Gets Attacked
 
-| Category | What the Asshole Notices |
+| Category | What the Nemesis Notices |
 |----------|--------------------------|
 | **Claims** | Unsupported assertions, overgeneralizations, weasel words ("some people say"), false authority |
 | **Logic** | Leaps in reasoning, missing steps, contradictions, circular arguments, false dichotomies |
@@ -47,7 +47,7 @@ This reader:
 ## Output Format
 
 ```
-## The Asshole Read
+## The Nemesis Read
 
 **Overall impression:** [One brutal sentence about how this reads to a hostile audience]
 

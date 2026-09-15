@@ -17,13 +17,14 @@ Read `../../references/context-contract.md` and inspect the active project's ins
 |---|---|
 | Syntax, diction, tone, cadence, register, punctuation, verbal tic, or sentence-construction preference | The governing `VOICE.md` |
 | Argument, evidence, article structure, substantive standard, audience promise, format, or publication-readiness criterion | The governing `STYLE.md` |
+| Confirmed reader situation, knowledge, interest, want, resistance, or audience research finding | The resolved `AUDIENCE.md`, including a named shared source; retain source, date, and scope |
 | Repeated editorial failure | Relevant guardrail or review reference |
 | Reusable workflow improvement | Workflow or architecture file |
 | Piece-specific decision or open loop | The active draft, notes, or project status artifact |
 
 Never save durable learning into an installed plugin/cache copy. Do not append lessons to a skill's `SKILL.md` merely because the skill was active.
 
-If a legacy `TASTE.md` is still present, route new learning to `VOICE.md` or `STYLE.md` and offer migration. Do not delete or archive `TASTE.md` without explicit approval.
+If a legacy `TASTE.md` is still present, route new learning to `VOICE.md`, `STYLE.md`, or the governing `AUDIENCE.md` and offer migration. Do not delete or archive `TASTE.md` without explicit approval.
 
 When one correction mixes sentence craft and substantive standards, split it into two atomic rules. Do not duplicate the combined rule across both files.
 
@@ -37,6 +38,8 @@ Distinguish:
 - an inference that still needs confirmation.
 
 If the user explicitly says to save an enduring preference, proceed once the destination is clear and permitted. If the lesson is inferred, show the proposed rule and ask the user to confirm before making it durable.
+
+For audience learning, a piece-specific assumption stays with the assignment. Do not promote positioning or an editorial inference to observed reader behavior. A shared audience guide may affect multiple publications; preserve its scope and update it only within the user's authorization. Follow the existing shared source rather than creating a competing local copy.
 
 ## Write Precisely
 

@@ -13,6 +13,8 @@ On a first meaningful interaction, `cw-scribe` checks for a draft, active worksp
 
 You do not need to know the setup or onboarding tools by name. Use `cw-setup-project` directly only when you explicitly want to create or migrate a self-contained writing folder yourself.
 
+Optional `AUDIENCE.md` holds reader knowledge alongside voice and style. Use the shared audience guide named by the project when one exists; missing audience guidance does not block work. The current assignment can specify a narrower audience. Ask `cw-onboarding` to establish or refresh audience context when needed.
+
 ## Common Routes
 
 | You have | Start with |

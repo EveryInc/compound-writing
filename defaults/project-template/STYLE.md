@@ -13,7 +13,7 @@ Do not put word choice, sentence construction, cadence, punctuation, verbal tics
 
 Classification test: if a rule changes the claim, support, organization, or readiness standard of the article, it belongs here. If it changes wording, sentence construction, or tone, it belongs in `VOICE.md`. Split mixed feedback into separate rules.
 
-Start with your reader promise, audience, thematic territory, and one reliable structure. Let the guide grow from real work.
+Start with your reader promise, thematic territory, and one reliable structure. Keep durable reader knowledge in optional `AUDIENCE.md` or a maintained shared audience guide; use the assignment context when neither exists. Let the guide grow from real work.
 
 ## Writing identity
 
@@ -22,13 +22,12 @@ Start with your reader promise, audience, thematic territory, and one reliable s
 - **What it is for:** [The need it serves or problem it solves]
 - **What makes it distinct:** [Why this writing deserves to exist]
 
-## Audience
+## Audience Context
 
-- **Primary reader:** [Who this is for]
-- **What they already know:** [Relevant baseline]
-- **What they currently believe or feel:** [Starting state]
-- **What they should leave with:** [Change in understanding, feeling, or action]
-- **What must never be assumed:** [Knowledge, access, politics, identity, experience]
+- **Governing audience guide, if maintained:** [Link to local or shared AUDIENCE.md]
+- **Assignment-specific reader:** [Use the brief when the piece addresses a narrower audience]
+
+The audience guide describes readers. This file specifies what the writing owes them. Do not duplicate the reader profile here or require an audience file before writing.
 
 ## Reader promise
 

@@ -35,17 +35,17 @@ Based on piece context, propose 4-6 reviewers.
 | Signal | Suggests Including |
 |--------|-------------------|
 | Personal/reflective content | sedaris, mom |
-| Argumentative content | asshole, vonnegut |
+| Argumentative content | nemesis, vonnegut |
 | Technical or jargon-heavy | reader, mom, hemingway |
 | Narrative structure | vonnegut, hitchcock, sorkin |
 | Feels slow or wandering | sorkin |
 | Feels bloated | hemingway |
-| High-stakes / pre-publish | asshole, hemingway |
+| High-stakes / pre-publish | nemesis, hemingway |
 | Cold read, uncertain audience response, or missing setup | reader |
 | General audience | reader |
 | Non-expert accessibility | mom |
 | Early stage | vonnegut (fundamentals) |
-| Late stage | hemingway, asshole (polish, stress-test) |
+| Late stage | hemingway, nemesis (polish, stress-test) |
 
 **Check the active writer and project context for:**
 - Preferred reviewers
@@ -93,7 +93,7 @@ Once confirmed:
 
 ```
 [Spawn in parallel:]
-- Task: asshole-reviewer with draft
+- Task: nemesis-reviewer with draft
 - Task: mom-reviewer with draft
 - Task: hemingway-reviewer with draft
 - Task: sorkin-reviewer with draft
@@ -122,7 +122,7 @@ goals: [from context if present]
 
 ## Reviewer Outputs
 
-### asshole-reviewer
+### nemesis-reviewer
 [full output]
 
 ### mom-reviewer
@@ -148,7 +148,7 @@ Present the synthesizer's output to the user.
 
 | Reviewer | Subagent Type | Focus |
 |----------|---------------|-------|
-| asshole | compound-writing:review:asshole-reviewer | Logical rigor, unsupported claims |
+| nemesis | compound-writing:review:nemesis-reviewer | Logical rigor, unsupported claims |
 | reader | compound-writing:review:reader-reviewer | First-time reading experience, missing setup, trust and friction |
 | mom | compound-writing:review:mom-reviewer | Accessibility, jargon, general reader |
 | hemingway | compound-writing:review:hemingway-reviewer | Economy, cutting, word-level |
@@ -164,7 +164,7 @@ If the active context names a piece type, use it as a starting point:
 | piece_type | Default Panel |
 |------------|---------------|
 | `essay` / `personal` | reader, sedaris, vonnegut, sorkin |
-| `argument` / `opinion` | asshole, vonnegut, hemingway, reader |
+| `argument` / `opinion` | nemesis, vonnegut, hemingway, reader |
 | `explainer` / `technical` | reader, mom, hemingway, sorkin |
 | `narrative` / `story` | vonnegut, hitchcock, sorkin, sedaris |
 | `newsletter` | reader, sorkin, hemingway |
@@ -195,7 +195,7 @@ sentimentality—I recommend:
 | **mom** | General audience check. Will flag where you lose non-insiders. |
 | **sedaris** | Personal material that might benefit from more specificity or humor. |
 | **sorkin** | Revision stage—check if pacing is tight. |
-| **asshole** | The emotional claims need to be earned, not asserted. |
+| **nemesis** | The emotional claims need to be earned, not asserted. |
 
 **Not including:**
 - **hemingway** — The prose reads clean; economy isn't the issue here
@@ -214,7 +214,7 @@ Agent: Adding hemingway. Running the panel now.
 
 ## Panel Synthesis
 
-**Panel:** asshole, hemingway, mom, sedaris, sorkin
+**Panel:** nemesis, hemingway, mom, sedaris, sorkin
 **Piece context:** essay for general audience, revision stage, goal: emotional
 impact without sappiness
 
@@ -224,8 +224,8 @@ impact without sappiness
 
 | Issue | Flagged By | Recommendation |
 |-------|------------|----------------|
-| Opening two paragraphs are slow | sorkin, hemingway, asshole | Cut or restructure—start closer to the boat |
-| "He taught me everything" is unearned | asshole, sedaris | Show what he taught, don't declare it |
+| Opening two paragraphs are slow | sorkin, hemingway, nemesis | Cut or restructure—start closer to the boat |
+| "He taught me everything" is unearned | nemesis, sedaris | Show what he taught, don't declare it |
 | Section 3 gets abstract | mom, sorkin | Ground it in a specific moment |
 
 ---
@@ -252,7 +252,7 @@ momentum, they work against the goal.
 
 - **sedaris:** "There's a joke hiding in the part about him never admitting he
   was wrong. You're circling it but won't commit."
-- **asshole:** "Your ending asks the reader to feel something you haven't set
+- **nemesis:** "Your ending asks the reader to feel something you haven't set
   up. The 'I finally understood' move is unearned."
 
 ---

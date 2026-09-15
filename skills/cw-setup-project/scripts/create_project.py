@@ -14,6 +14,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("target", type=Path, help="Writing-home folder to create or initialize")
     parser.add_argument(
+        "--with-audience",
+        action="store_true",
+        help="Include an optional AUDIENCE.md template when no shared audience guide is used",
+    )
+    parser.add_argument(
         "--add-missing",
         action="store_true",
         help="Add only missing template items to a non-empty existing folder",
@@ -44,13 +49,15 @@ def main() -> int:
 
     for source in sorted(template.rglob("*")):
         relative = source.relative_to(template)
+        if relative == Path("AUDIENCE.md") and not args.with_audience:
+            continue
         destination = target / relative
         if source.is_dir():
             if not destination.exists():
                 destination.mkdir(parents=True)
                 created.append(f"{relative}/")
             continue
-        if destination.exists():
+        if destination.exists() or destination.is_symlink():
             skipped.append(str(relative))
             continue
         destination.parent.mkdir(parents=True, exist_ok=True)

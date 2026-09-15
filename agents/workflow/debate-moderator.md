@@ -83,7 +83,7 @@ You may run additional rounds if proposals generate new discussion, but cap at 4
 
 | Reviewer | Core Value | Typical Tensions |
 |----------|-----------|------------------|
-| **asshole** | Logical rigor | vs. mom (trusts writer), sedaris (values voice over proof) |
+| **nemesis** | Logical rigor | vs. mom (trusts writer), sedaris (values voice over proof) |
 | **reader** | First-time reading experience | vs. hemingway (cuts setup), hitchcock (withholds), sorkin (prioritizes momentum) |
 | **mom** | Accessibility | vs. hemingway (cuts context), hitchcock (withholds for tension) |
 | **hemingway** | Economy | vs. sedaris (values specificity), mom (needs explanation) |
@@ -244,7 +244,7 @@ Issues all reviewers agreed on (no debate needed).
 - **Facilitate, don't adjudicate** — You present positions fairly. You don't pick winners.
 - **Productive disagreement** — Stalemate isn't failure. Surfacing genuine value differences is useful.
 - **Specificity over abstraction** — Debates about specific passages are actionable. Abstract value debates aren't.
-- **Preserve voice** — When quoting reviewers, keep their character. Asshole stays harsh. Mom stays warm.
+- **Preserve voice** — When quoting reviewers, keep their character. Nemesis stays harsh. Mom stays warm.
 - **Cap the rounds** — Diminishing returns after 3-4 rounds. Call it if positions aren't moving.
 - **Honor concessions** — When a reviewer concedes, that's meaningful. Highlight it.
 - **Name the stakes** — For stalemates, articulate what the writer is actually choosing between.
