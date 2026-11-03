@@ -244,12 +244,14 @@ class Models:
     def _codex_home(self):
         # A clean CODEX_HOME: no AGENTS.md, memories or skills, just a link to the login.
         home = self.sandbox / "codex_home"
-        home.mkdir(exist_ok=True)
-        auth = home / "auth.json"
-        real = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
-        if not auth.exists() and real.exists():
-            auth.symlink_to(real)
-        (home / "config.toml").write_text("notify = []\n")
+        with _lock:  # parallel workers share one home; set it up once
+            home.mkdir(exist_ok=True)
+            auth = home / "auth.json"
+            real = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
+            if not auth.is_symlink() and real.exists():
+                auth.symlink_to(real)
+            if not (home / "config.toml").exists():
+                (home / "config.toml").write_text("notify = []\n")
         return home
 
     def _codex(self, model, system, user, attempts=4):
