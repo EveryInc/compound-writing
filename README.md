@@ -64,6 +64,7 @@ The setup workflow never creates the writing home inside the plugin or overwrite
 | Fix argument, structure, stakes, or evidence | `cw-dev-edit` |
 | Revise sentences while preserving voice | `cw-line-edit` |
 | Remove machine residue or voice drift | `cw-ai-check`, `cw-voice-check`, `cw-tracks` |
+| Test and tune the voice and style guides | `cw-tune` (optional, after `cw-onboarding`) |
 | See the piece through a first-time reader's eyes | `cw-reader` |
 | Pressure-test the piece | `cw-objections`, `cw-nemesis`, `cw-panel`, `cw-debate`, reviewer lenses |
 | Check publication readiness | `cw-final-pass` |
@@ -86,6 +87,7 @@ It is a map, not a gate.
 | `cw-onboarding` | Begin or refresh voice, style, and optional audience context. |
 | `cw-scribe` | Choose and compose the smallest useful workflow for an open-ended request. |
 | `cw-save` | Turn a confirmed preference or lesson into durable project context. |
+| `cw-tune` | Optionally test and tune `VOICE.md` and `STYLE.md` against your own published pieces for the model you draft with, then propose the changes for approval. |
 
 ### Develop The Idea
 

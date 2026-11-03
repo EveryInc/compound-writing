@@ -100,3 +100,5 @@ Confirm:
 - where the guides and supporting examples were saved, including any shared audience source;
 - which gaps remain intentionally open;
 - how future Compound Writing skills will load the writing home.
+
+When the writer has eight or more finished pieces of their own, mention once that `cw-tune` can later test these guides against that work and tune them for the model they draft with. It is optional; do not start it unasked.
