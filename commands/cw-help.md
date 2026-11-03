@@ -28,6 +28,7 @@ Optional `AUDIENCE.md` holds reader knowledge alongside voice and style. Use the
 | A structurally weak draft | `cw-dev-edit` |
 | Stable structure and rough prose | `cw-line-edit` |
 | Generic or machine-smoothed copy | `cw-voice-check`, `cw-ai-check`, or `cw-tracks` |
+| Voice and style guides you want tested or tuned | `cw-tune` |
 | A fresh-eyes or first-time-reader check | `cw-reader` |
 | A nearly publishable piece | `cw-final-pass` |
 | A high-stakes piece | `cw-objections`, `cw-panel`, or `cw-debate` |

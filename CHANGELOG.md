@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added optional `cw-tune`, which tests and tunes an existing `VOICE.md` and `STYLE.md` against the writer's own pieces for a chosen drafting model (Claude Code, Codex or Antigravity). A blind judge compares drafts with the real pieces, an autoresearch loop proposes edits to each file within the voice/style boundary, and the tuned guides are proposed for approval with a held-out score and a diff. Runs live in a visible `tuning/` folder in the writing home.
+
 ## 2.4.1 — 2026-09-15
 
 - Renamed the least-charitable reviewer to `cw-nemesis` throughout the public plugin. Its behavior is unchanged.

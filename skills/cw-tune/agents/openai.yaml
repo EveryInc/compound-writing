@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tune Voice And Style"
+  short_description: "Test and tune VOICE.md and STYLE.md against your own writing"
+  default_prompt: "Use $tune to tune my VOICE.md and STYLE.md against my published pieces for the model I draft with."

@@ -43,6 +43,7 @@ Choose the smallest route that fits the request:
 | Structure is stable and prose needs revision | `cw-line-edit` |
 | Needs a first-time-reader or fresh-eyes cold read | `cw-reader` |
 | Sounds generic or machine-smoothed | `cw-ai-check`, `cw-voice-check`, `cw-tracks` |
+| Has guides and wants to know if they work, or to tune them for a model | `cw-tune` |
 | Needs publication, project, or format standards | Load the active `STYLE.md`, brief, template, or maintained workflow |
 | Needs a publication-readiness decision | `cw-final-pass` |
 | Needs pressure from multiple perspectives | `cw-objections`, a named lens, `cw-panel`, or `cw-debate` |

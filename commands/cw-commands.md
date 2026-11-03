@@ -15,6 +15,7 @@ description: List Compound Writing workflows by the outcome they support.
 - `cw-setup-project` — Manually create a portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`.
 - `cw-onboarding` — Begin or refresh voice, style, and optional audience context.
 - `cw-save` — Capture a confirmed preference, lesson, or workflow improvement.
+- `cw-tune` — Optionally test and tune `VOICE.md` and `STYLE.md` against your own pieces for the model you draft with.
 
 ## Develop The Idea
 
