@@ -304,8 +304,7 @@ def pmap(fn, items, workers):
 
 
 def workers_for(cfg, *specs):
-    # Antigravity runs one request at a time.
-    return 1 if any(s.startswith("agy:") for s in specs) else cfg["workers"]
+    return cfg["workers"]
 
 
 # ---------------------------------------------------------------- run folder

@@ -24,7 +24,7 @@ Resolve, asking only what cannot be inferred:
 - **The drafting model**, named `<cli>:<model>`: `claude:claude-opus-5-5`, `codex:gpt-6.1-sol` or `agy:default`. Check which CLIs are installed and signed in (`claude`, `codex`, `agy`).
 - **Judge and optimizer:** default to `claude:claude-opus-5-5`. Without Claude Code, use the strongest model the writer's CLI offers for both.
 
-Tell the writer what it costs before starting: everything runs on their own subscriptions, roughly a few hundred model calls and 1-3 hours with Claude Code or Codex. Antigravity handles one request at a time, so tuning for it takes much longer; suggest fewer rounds or an overnight run. A usage limit stops a step cleanly; re-running resumes from the cache.
+Tell the writer what it costs before starting: everything runs on their own subscriptions, roughly a few hundred model calls and 1-3 hours. Calls run in parallel batches (`--workers`, default 4); raise it if the writer's plan allows more concurrent requests. A usage limit stops a step cleanly; re-running resumes from the cache.
 
 ## Run
 
