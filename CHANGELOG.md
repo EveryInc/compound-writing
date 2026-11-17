@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added optional `cw-tune`, which tests and tunes an existing `VOICE.md` and `STYLE.md` against the writer's own pieces for a chosen drafting model (Claude Code, Codex or Antigravity). It first reports whether the guides beat no guides at all, then an autoresearch loop proposes edits to each file within the voice/style boundary, scored by an Elo ratchet: a blind judge plays each draft against a ladder of every earlier draft of the same piece, so the score never maxes out. The tuned guides are proposed for approval with held-out counts, a diff and a list of every rule removed or reworded. Drafts are written from notes for each piece, as the writer would draft for real, and a preflight check catches signed-out CLIs and API-key billing. Runs live in a visible `tuning/` folder in the writing home.
+- Added optional `cw-tune`, which tests and tunes an existing `VOICE.md` against the writer's own pieces for a chosen drafting model (Claude Code, Codex or Antigravity). Pieces are cut into sections so a dozen pieces give dozens of test cases, and each section is drafted from notes for it, as the writer would draft for real. It first reports whether the guides beat no guides at all, then an autoresearch loop proposes edits to `VOICE.md`, scored by an Elo ratchet: a blind voice judge plays each draft against a ladder of every earlier draft of the same section, so the score never maxes out. The tuned `VOICE.md` is proposed for approval with held-out counts, a diff and a list of every rule removed or reworded. `STYLE.md` is never edited. A preflight check catches signed-out CLIs and API-key billing.
 
 ## 2.4.1 — 2026-09-15
 

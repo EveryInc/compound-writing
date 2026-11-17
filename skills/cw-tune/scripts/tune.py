@@ -1,28 +1,32 @@
 #!/usr/bin/env python3
-"""Tune a writing home's VOICE.md and STYLE.md against the writer's real pieces.
+"""Tune a writing home's VOICE.md against the writer's real pieces, one section at a time.
 
-The writer's existing guides are the baseline. Each step:
+VOICE.md is how the writer's sentences sound, and that shows up in a few paragraphs, so each piece
+is split into sections of a few hundred words and every section is a test case. A corpus of a dozen
+pieces gives dozens of cases. STYLE.md (argument, structure, what the piece must do) is loaded
+when drafting, as in real use, but never edited: it can be a shared house standard, and its
+subject only shows up across a whole piece.
 
-  prepare   copy the guides as the seed, load the writer's pieces, split them learn / tune / test,
-            then run `check`
+  prepare   copy the guides as the seed, split the writer's pieces learn / tune / test, cut each
+            piece into sections, then run `check`
   check     confirm each CLI is installed, signed in and on the writer's subscription, not an API key
-  notes     write the notes the writer might have had before each piece: what it says, in order,
-            with its facts and stories. Drafts are written from these, as the writer would in real use
+  notes     write the notes the writer might have had for each section: what it says, with its
+            facts and stories. Sections are drafted from these, as the writer would in real use
   baseline  do the writer's guides beat no guides at all? Answered before any tuning
-  optimize  autoresearch scored by an Elo ratchet: propose one change to VOICE.md and/or STYLE.md,
-            draft the tuning pieces with it, and play each draft against that piece's ladder of
-            every draft written for it so far. Keep the change if its drafts rate higher
-  evaluate  the tuned guides head to head against the original guides and no guides, on held-out
-            pieces nothing was tuned on
-  propose   write the tuned guides, a diff and a report (every rule removed or reworded) for review
-  adopt     after the writer approves, back up the live guides and replace them
+  optimize  autoresearch on VOICE.md scored by an Elo ratchet: propose one change, draft the tuning
+            sections with it, and play each draft against that section's ladder of every draft
+            written for it so far. Keep the change if its drafts rate higher
+  evaluate  the tuned VOICE.md head to head against the original guides and no guides, on sections
+            of held-out pieces nothing was tuned on
+  propose   write the tuned VOICE.md, a diff and a report (every rule removed or reworded) for review
+  adopt     after the writer approves, back up the live VOICE.md and replace it
 
 The metric is the Elo ratchet from the write-like-Mike experiment (the `ladder` metric in Every
-Checks, ArenaMetric in DSPy). A blind judge compares two drafts against the real piece, in both
-orders. Each piece keeps a ladder of every draft ever written for it; the original guides' draft is
-pinned at 1000. A new draft plays the piece's best draft first and steps down while it loses, then
-every rating on the piece is refit from all its games. The bar rises whenever something beats it,
-so the score has no ceiling and there is no "perfect" round to stop on.
+Checks, ArenaMetric in DSPy). A blind judge compares two drafts of a section against the real one,
+in both orders, on voice alone. Each section keeps a ladder of every draft ever written for it; the
+original guides' draft is pinned at 1000. A new draft plays the section's best draft first and steps
+down while it loses, then every rating on the section is refit from all its games. The bar rises
+whenever something beats it, so the score has no ceiling.
 
 Model calls go through headless CLIs on the writer's own subscription. A model is named
 "<cli>:<model>": claude:claude-opus-5-5, codex:gpt-6.1-sol, agy:default ("default" uses the CLI's
@@ -54,25 +58,22 @@ from pathlib import Path
 
 NOTES_SPEC = """# Writer's notes
 
-Write the notes the author might have had before writing this piece: what they wanted to say, in
-order, with the facts, examples and stories they planned to use. A writer's notes are terse and
-unpolished, and they can keep a phrase or line the author already had in mind, but they are not the
-piece. Do not describe its tone or style.
+The piece below is split into numbered sections. For each section, write the notes the author might
+have had before writing it: what it says, in order, with the facts, examples and stories it uses.
+A writer's notes are terse and unpolished, and they can keep a phrase the author already had in
+mind, but they are not the section. Do not describe its tone or style.
 
-Write one JSON object, exactly these keys:
+Write one JSON object, exactly these keys, with one entry in "sections" per numbered section, in order:
 
 {
-  "topic": "What the piece is about, in a sentence.",
-  "audience": "Who the piece is for, in a few words.",
-  "thesis": "The main point, in one or two sentences.",
-  "outline": ["The beats of the piece in order, one string per section or major move, as terse notes."],
-  "facts": ["Every specific fact, number, study, product, tool, company, person or source the piece uses."],
-  "author_experiences": ["Things from the author's own life or work the piece draws on, stated plainly."],
-  "artifacts": ["Any prompts, code, tables, templates, charts or images the piece includes, described by what they contain."],
-  "format": {"approx_words": 0, "uses_headings": true, "uses_lists": false, "includes_code_or_prompts": false}
-}
-
-Leave out the title and boilerplate (newsletter plugs, calls to action, captions)."""
+  "topic": "What the whole piece is about, in a sentence.",
+  "thesis": "The piece's main point, in one or two sentences.",
+  "sections": [
+    {"points": ["What this section says, in order, as terse notes."],
+     "facts": ["Specific facts, numbers, sources, products or people it uses."],
+     "author_experiences": ["Things from the author's own life or work it draws on, stated plainly."]}
+  ]
+}"""
 
 DRAFT_SYSTEM = """You are drafting with Compound Writing. Two guides govern this writer's work.
 VOICE.md is the authority for how the sentences sound: syntax, diction and tone. STYLE.md is the
@@ -86,23 +87,20 @@ authority for what the piece must do: argument, evidence, structure and standard
 {style}
 </STYLE.md>"""
 
-WRITE_INSTRUCTION = ("Write the complete piece from the writer's notes below. "
-                     "Output only the body in Markdown, with no title and no commentary.\n\n")
-
-JUDGE_CRITERIA = """Decide which draft is closer to the reference piece, meaning it reads more like the
-same author wrote it. Both drafts were written from the same notes, so do not reward a
-draft for covering more facts. Compare authorship: voice and tone, how the piece opens and closes,
-structure and pacing, paragraph and sentence habits, word choice, formatting, how evidence, sources
-and personal experience are introduced, and how much the draft sounds like generic AI prose versus
-this particular writer."""
+WRITE_INSTRUCTION = ("Write one section of a piece from the writer's notes below. Output only the "
+                     "section in Markdown, with no title and no commentary.\n\n")
 
 JUDGE_PROMPT = """You are judging writing against a reference.
 
-{criteria}
+Decide which draft sounds more like the author of the reference passage wrote it. Judge voice
+only: how the sentences sound. Compare rhythm and sentence length, syntax, word choice, register
+and tone, punctuation, paragraph shape, humour, verbal habits, and how much the draft sounds like
+generic AI prose versus this particular writer. Both drafts were written from the same notes, so
+ignore what they cover, in what order, and how they are organised.
 
-<reference_piece>
+<reference_passage>
 {gold}
-</reference_piece>
+</reference_passage>
 
 <draft_A>
 {a}
@@ -113,82 +111,69 @@ JUDGE_PROMPT = """You are judging writing against a reference.
 </draft_B>
 
 Reply with only a JSON object. In the notes, refer to the draft as "this draft", never by its
-letter, and quote the reference where it helps. Voice notes cover how sentences sound (syntax,
-word choice, tone, rhythm, punctuation). Style notes cover what the piece does (openings and
-endings, structure, argument, how evidence and personal experience are used, formatting).
-{{"A_voice": "how draft A's sentences differ from the reference",
-  "A_style": "how draft A's structure, argument and evidence differ from the reference",
-  "B_voice": "how draft B's sentences differ from the reference",
-  "B_style": "how draft B's structure, argument and evidence differ from the reference",
+letter, and quote the reference where it helps.
+{{"A": "how draft A's sentences differ from the reference's",
+  "B": "how draft B's sentences differ from the reference's",
   "closer": "A" or "B"}}"""
 
-PROGRAM = """You are an autonomous researcher improving a writer's Compound Writing guides. You run one
-experiment per turn: form a hypothesis about what would make drafts read more like {name}'s real
-writing, edit VOICE.md and/or STYLE.md to test it, and the harness evaluates it. If the score
+PROGRAM = """You are an autonomous researcher improving a writer's VOICE.md, the Compound Writing guide to
+how their sentences sound. You run one experiment per turn: form a hypothesis about what would make
+drafts sound more like {name}, edit VOICE.md to test it, and the harness evaluates it. If the score
 beats the current best it is kept; otherwise it is reverted.
 
-How the guides are used: {name} gives {writer} both files as its instructions, along with their
-notes for a piece (what it says, in order, with its facts and stories), and it writes the piece.
-The test works the same way, with notes for pieces {name} has already published. The guides must
-supply everything about how {name} writes that the notes don't. Never mention the judge, the
-reference piece or anything else about the scoring in the guides.
+How the guides are used: {name} gives {writer} VOICE.md and STYLE.md as its instructions, along
+with their notes for what to write, and it writes. The test works the same way, a section at a
+time, with notes for sections of pieces {name} has already published, and a judge who compares
+only how the sentences sound. Never mention the judge, the reference or anything else about the
+scoring in the guide.
 
-Keep the boundary between the files. It is how the writer maintains them:
-- VOICE.md: how sentences sound. Syntax, diction and tone: cadence, rhythm, register,
-  punctuation, paragraph shape, verbal tics, sentence-level moves, phrases to favour or avoid.
-- STYLE.md: what the piece must do. Argument, evidence, how sources and personal experience are
-  used, structure (openings, sections, endings), formatting conventions, readiness standards.
-If a rule changes wording, sentence construction or tone, it goes in VOICE.md. If it changes the
-claim, support, organisation or standard of the piece, it goes in STYLE.md. Split mixed rules.
-The judge's voice notes usually point at VOICE.md and its style notes at STYLE.md.
+You edit VOICE.md only. It covers how sentences sound: syntax, diction and tone, cadence, rhythm,
+register, punctuation, paragraph shape, humour, verbal tics, sentence-level moves, phrases to
+favour or avoid. STYLE.md is shown for context and stays as it is. It covers argument, evidence,
+structure, openings and endings; do not move those into VOICE.md.
 
-These are the writer's own files, and many rules in them are deliberate choices, not guesses. Keep
-their existing structure and headings, keep rules that are working, and prefer adding, sharpening
-or replacing specific rules over rewriting everything. Remove or reverse a rule the writer wrote
-only when the judge's notes clearly show it pulls drafts away from their real writing, and list
-every rule you remove or reverse in <removed> with the reason. Back material rules with a short cue
-of the observed move rather than long quotations, and never turn the writer's sentences into a
-phrase bank to copy.
+This is the writer's own file, and many rules in it are deliberate choices, not guesses. Keep its
+existing structure and headings, keep rules that are working, and prefer adding, sharpening or
+replacing specific rules over rewriting everything. Remove or reverse a rule the writer wrote only
+when the judge's notes clearly show it pulls drafts away from their real writing, and list every
+rule you remove or reverse in <removed> with the reason. Back rules with a short cue of the observed
+move rather than long quotations, and never turn the writer's sentences into a phrase bank to copy.
 
-About the score: it is an Elo rating, the chess kind. Every tuning piece keeps a ladder of every
+About the score: it is an Elo rating, the chess kind. Every tuning section keeps a ladder of every
 draft ever written for it. The draft written with the writer's original guides is fixed at 1000; a
 new draft plays the best draft on the ladder first, steps down while it loses, and is rated from
-those games. The score is the mean rating across tuning pieces. There is no ceiling: once a version
-of the guides is kept, its drafts become the bar the next experiment has to beat. Look for general
-patterns in the judge's notes rather than patching individual pieces. Change one idea at a time
-when you can. Simplifications that keep the score are good. If recent experiments failed, try a
+those games. The score is the mean rating across tuning sections. There is no ceiling: once a
+version is kept, its drafts become the bar the next experiment has to beat. Look for patterns
+across many sections in the judge's notes rather than patching one. Change one idea at a time when
+you can. Simplifications that keep the score are good. If recent experiments failed, try a
 different direction."""
 
 TURN = """## Experiment log
 {log}
 
-## Current best guides (Elo {best_score:.0f})
+## Current best VOICE.md (Elo {best_score:.0f})
 <VOICE.md>
 {voice}
 </VOICE.md>
 
+## STYLE.md (for context; not edited)
 <STYLE.md>
 {style}
 </STYLE.md>
 
-## Judge notes on the current best guides' drafts (lowest-rated first)
+## Judge notes on the current best's drafts (lowest-rated sections first)
 {notes}
 {last_attempt}
 ## Real pieces from the learning set, for study
 {study}
 
-Propose the next experiment. Reply in exactly this format. Give each file you change in full; write
-UNCHANGED inside the tags of a file you leave as it is, and "none" inside <removed> if you removed
-or reversed nothing.
+Propose the next experiment. Reply in exactly this format, giving VOICE.md in full, and "none" inside
+<removed> if you removed or reversed nothing.
 <hypothesis>one or two sentences</hypothesis>
-<target>voice, style or both</target>
 <removed>each rule removed or reversed, one per line, with the reason</removed>
 <voice_md>
-the complete VOICE.md, or UNCHANGED
-</voice_md>
-<style_md>
-the complete STYLE.md, or UNCHANGED
-</style_md>"""
+the complete VOICE.md
+</voice_md>"""
 
 # ---------------------------------------------------------------- model calls
 
@@ -393,49 +378,82 @@ def system_for(g):
     return DRAFT_SYSTEM.format(voice=g["voice"].strip(), style=g["style"].strip())
 
 
-def pieces(work, split=None):
+def split_sections(text, lo=150, hi=450):
+    """Cut a piece into sections of roughly lo-hi words: at headings where the piece has them,
+    otherwise by grouping paragraphs. A short tail joins the section before it."""
+    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    sections, cur = [], []
+
+    def words(ps):
+        return sum(len(p.split()) for p in ps)
+    for p in paras:
+        heading = re.match(r"#{1,6}\s", p)
+        if cur and words(cur) >= lo and (heading or words(cur) + len(p.split()) > hi):
+            sections.append(cur)
+            cur = []
+        cur.append(p)
+    if cur:
+        if sections and words(cur) < lo:
+            sections[-1] += cur
+        else:
+            sections.append(cur)
+    return ["\n\n".join(s) for s in sections]
+
+
+def prose_words(text):
+    """Words outside code blocks and tables: what the voice judge can actually judge."""
+    text = re.sub(r"```.*?```", "", text, flags=re.S)
+    return sum(len(line.split()) for line in text.splitlines() if not line.lstrip().startswith("|"))
+
+
+def cases(work, split):
+    """Every section of every piece in the split ("tune", "test" or "tune+test") that has notes."""
+    sel = json.loads((work / "cases.json").read_text())
     out = []
     for row in json.loads((work / "manifest.json").read_text()):
-        if split and row["split"] not in split.split("+"):
+        if row["split"] not in split.split("+"):
             continue
-        np_ = work / "notes" / f"{row['id']}.json"
-        out.append({**row, "gold": (work / "pieces" / f"{row['id']}.md").read_text(),
-                    "notes": json.loads(np_.read_text()) if np_.exists() else None})
-    return [p for p in out if p["notes"]] if split else out
+        nf = work / "notes" / f"{row['id']}.json"
+        if not nf.exists():
+            continue
+        notes = json.loads(nf.read_text())
+        secs = json.loads((work / "sections" / f"{row['id']}.json").read_text())
+        for k, gold in enumerate(secs):
+            cid = f"{row['id']}--{k + 1}"
+            if cid in sel and k < len(notes.get("sections", [])):
+                out.append({"id": cid, "piece": row["id"], "k": k, "n": len(secs), "gold": gold,
+                            "words": len(gold.split()), "topic": notes.get("topic", ""),
+                            "thesis": notes.get("thesis", ""), "notes": notes["sections"][k]})
+    return out
 
 
-def render_notes(p):
-    b, fmt = p["notes"], p["notes"].get("format", {})
-
+def render_notes(c):
     def bullets(items):
         return "\n".join(f"- {x}" for x in items) if items else "- (none)"
 
-    head = "".join(f"**{k}:** {p[k.lower()]}\n" for k in ("Publication", "Date") if p.get(k.lower()))
+    where = ("the opening" if c["k"] == 0 else "the closing section" if c["k"] == c["n"] - 1
+             else f"section {c['k'] + 1} of {c['n']}")
+    head = re.match(r"(#{1,6}\s.*)", c["gold"])
+    n = c["notes"]
     return f"""# Notes
 
-{head}**Target length:** about {fmt.get('approx_words', p['words'])} words
-**Format:** {'uses section headings' if fmt.get('uses_headings') else 'no section headings'}; {'uses lists' if fmt.get('uses_lists') else 'mostly prose'}; {'includes code or prompts' if fmt.get('includes_code_or_prompts') else 'no code'}
+**The piece is about:** {c['topic']}
+**Its main point:** {c['thesis']}
+**This section:** {where}, about {c['words']} words{f', under the heading "{head.group(1).lstrip("# ")}"' if head else ''}
 
-**Topic:** {b.get('topic', '')}
-**Audience:** {b.get('audience', '')}
-**Thesis:** {b.get('thesis', '')}
+## What this section says, in order
+{bullets(n.get('points', []))}
 
-## Outline (in order)
-{bullets(b.get('outline', []))}
-
-## Facts, sources and examples to use
-{bullets(b.get('facts', []))}
+## Facts, sources and examples
+{bullets(n.get('facts', []))}
 
 ## Author's own experience to draw on
-{bullets(b.get('author_experiences', []))}
-
-## Artifacts to include (prompts, code, tables, images)
-{bullets(b.get('artifacts', []))}
+{bullets(n.get('author_experiences', []))}
 """
 
 
-def draft(models, g, p, writer):
-    return models.chat(writer, WRITE_INSTRUCTION + render_notes(p), system=system_for(g) if g else "")
+def draft(models, g, c, writer):
+    return models.chat(writer, WRITE_INSTRUCTION + render_notes(c), system=system_for(g) if g else "")
 
 
 # ---------------------------------------------------------------- judge
@@ -450,8 +468,7 @@ def _parse_judge(text):
         body = m.group(0)  # notes quote the reference and sometimes break the JSON
         closer = re.search(r'"\s*closer\s*"\s*:\s*"?([AB])', body)
         out = {"closer": closer.group(1) if closer else ""}
-        keys = ["A_voice", "A_style", "B_voice", "B_style", "closer"]
-        for key, nxt in zip(keys, keys[1:]):
+        for key, nxt in (("A", "B"), ("B", "closer")):
             n = re.search(rf'"\s*{key}\s*"\s*:\s*"(.*?)"\s*,\s*"\s*{nxt}\s*"', body, re.S)
             out[key] = n.group(1) if n else ""
     closer = str(out.get("closer", "")).strip().upper()[:1]
@@ -461,7 +478,7 @@ def _parse_judge(text):
 
 
 def compare(models, judge, gold, a, b):
-    prompt = JUDGE_PROMPT.format(criteria=JUDGE_CRITERIA, gold=gold, a=a, b=b)
+    prompt = JUDGE_PROMPT.format(gold=gold, a=a, b=b)
     for attempt in range(3):
         try:
             return _parse_judge(models.chat(judge, prompt, sample=attempt))
@@ -472,14 +489,13 @@ def compare(models, judge, gold, a, b):
 
 def triad(models, judge, gold, x, y):
     """Judge both orderings to cancel position bias. Returns x's score in [0, 1] (0.5 is a split:
-    the judge followed the position) and the judge's voice and style notes on each draft."""
+    the judge followed the position) and the judge's voice notes on each draft."""
     c1, o1 = compare(models, judge, gold, x, y)
     c2, o2 = compare(models, judge, gold, y, x)
     score = ((c1 == "A") + (c2 == "B")) / 2
 
     def notes(first, second):
-        return {k: " ".join(n for n in (o1.get(f"{first}_{k}", ""), o2.get(f"{second}_{k}", "")) if n)
-                for k in ("voice", "style")}
+        return {"voice": " ".join(n for n in (o1.get(first, ""), o2.get(second, "")) if n)}
     return score, notes("A", "B"), notes("B", "A")
 
 
@@ -514,7 +530,7 @@ def text_key(text):
 
 
 class Ladders:
-    """Per piece, every draft ever written for it, each with an Elo rating and its games.
+    """Per section, every draft ever written for it, each with an Elo rating and its games.
 
     Settings from the write-like-Mike experiment (simulated per-piece ladders, Oct 2026): three
     games, top-down, find a piece's true best draft about half the time against 8-19% for other
@@ -702,6 +718,22 @@ def read_corpus(path):
     return out
 
 
+def pick_sections(work, ids, limit, rng):
+    """Up to `limit` sections, taken round-robin across pieces so no one piece dominates."""
+    pools = []
+    for pid in ids:
+        secs = json.loads((work / "sections" / f"{pid}.json").read_text())
+        pool = [f"{pid}--{k + 1}" for k, s in enumerate(secs) if prose_words(s) >= 100]
+        rng.shuffle(pool)
+        pools.append(pool)
+    out = []
+    while len(out) < limit and any(pools):
+        for pool in pools:
+            if pool and len(out) < limit:
+                out.append(pool.pop())
+    return out
+
+
 def cmd_prepare(a):
     home = Path(a.home).expanduser().resolve()
     for f in ("VOICE.md", "STYLE.md"):
@@ -713,35 +745,41 @@ def cmd_prepare(a):
     corpus = read_corpus(Path(a.corpus).expanduser())
     kept = [c for c in corpus if a.min_words <= c["words"] <= a.max_words]
     print(f"Found {len(corpus)} files; {len(kept)} are {a.min_words}-{a.max_words} words.")
-    if len(kept) < 8:
-        sys.exit("Need at least 8 pieces of the writer's own work (ideally 20+) to tune and test fairly.")
+    if len(kept) < 6:
+        sys.exit("Need at least 6 pieces of the writer's own work (ideally 15+) to tune and test fairly.")
     n = len(kept)
-    test = a.test if a.test is not None else min(10, max(3, round(n * 0.3)))
-    tune = a.tune if a.tune is not None else min(8, max(3, round(n * 0.25)))
-    if n - test - tune < 2:
-        sys.exit(f"{n} pieces is too few for {test} test + {tune} tune; pass smaller --test/--tune.")
-    random.Random(a.seed).shuffle(kept)
-    (work / "pieces").mkdir(parents=True, exist_ok=True)
-    (work / "seed").mkdir(exist_ok=True)
+    test = a.test if a.test is not None else min(10, max(2, round(n * 0.3)))
+    learn = a.learn if a.learn is not None else 2
+    if n - test - learn < 2:
+        sys.exit(f"{n} pieces is too few for {test} test + {learn} learn; pass smaller --test/--learn.")
+    rng = random.Random(a.seed)
+    rng.shuffle(kept)
+    for d in ("pieces", "sections", "seed"):
+        (work / d).mkdir(parents=True, exist_ok=True)
     for f in ("VOICE.md", "STYLE.md"):
         shutil.copy(home / f, work / "seed" / f)
+    # Pieces are split before they are cut into sections, so no piece has sections on both sides.
     manifest, seen = [], set()
     for i, c in enumerate(kept):
         base = slugify(c["meta"].get("title") or Path(c["file"]).stem)[:60]
         pid = base if base not in seen else f"{base}-{i}"
         seen.add(pid)
         (work / "pieces" / f"{pid}.md").write_text(c["text"])
+        save_json(work / "sections" / f"{pid}.json", split_sections(c["text"]))
         manifest.append({"id": pid, "file": c["file"], "words": c["words"],
-                         "split": "test" if i < test else "tune" if i < test + tune else "learn",
-                         "publication": c["meta"].get("publication") or c["meta"].get("source") or "",
-                         "date": c["meta"].get("date", "")})
+                         "split": "test" if i < test else "learn" if i < test + learn else "tune"})
     save_json(work / "manifest.json", manifest)
+    ids = {s: [m["id"] for m in manifest if m["split"] == s] for s in ("tune", "test")}
+    tune_ids = pick_sections(work, ids["tune"], a.tune_sections, rng)
+    test_ids = pick_sections(work, ids["test"], a.test_sections, rng)
+    save_json(work / "cases.json", tune_ids + test_ids)
     cfg = {"home": str(home), "name": a.name, "writer": a.writer, "judge": a.judge, "optimizer": a.optimizer,
            "notes_model": a.notes_model, "workers": a.workers, "created": dt.date.today().isoformat()}
     save_json(work / "config.json", cfg)
-    print(f"Split: {n - test - tune} learn / {tune} tune / {test} test.\nRun folder: {work}")
-    if test < 10:
-        print(f"Note: {test} held-out pieces is a small test. Results will be reported as counts, not percentages.")
+    print(f"Pieces: {len(ids['tune'])} tune / {test} test / {learn} learn.\n"
+          f"Sections: {len(tune_ids)} for tuning, {len(test_ids)} held out.\nRun folder: {work}")
+    if len(test_ids) < 10:
+        print(f"Note: {len(test_ids)} held-out sections is a small test. Results will be counts, not percentages.")
     if not a.skip_check:
         run_check(cfg, Models(work))
 
@@ -754,44 +792,48 @@ def cmd_check(a):
 def cmd_notes(a):
     work = Path(a.work).expanduser()
     cfg, models = load_cfg(work), Models(work)
-    todo = [p for p in pieces(work) if not p["notes"]]
-    print(f"Writing notes for {len(todo)} pieces with {cfg['notes_model']}...")
+    rows = [r for r in json.loads((work / "manifest.json").read_text())
+            if r["split"] in ("tune", "test") and not (work / "notes" / f"{r['id']}.json").exists()]
+    print(f"Writing notes for {len(rows)} pieces with {cfg['notes_model']}...")
 
-    def one(p):
-        prompt = (f"{NOTES_SPEC}\n\nApproximate word count: {p['words']}\n\n<piece>\n{p['gold']}\n</piece>\n\n"
-                  "Return only the JSON object.")
+    def one(r):
+        secs = json.loads((work / "sections" / f"{r['id']}.json").read_text())
+        body = "\n\n".join(f"<section {k + 1}>\n{s}\n</section {k + 1}>" for k, s in enumerate(secs))
+        prompt = f"{NOTES_SPEC}\n\n<piece sections=\"{len(secs)}\">\n{body}\n</piece>\n\nReturn only the JSON object."
         for attempt in range(3):
             m = re.search(r"\{.*\}", models.chat(cfg["notes_model"], prompt, sample=attempt), re.S)
             try:
-                save_json(work / "notes" / f"{p['id']}.json", json.loads(m.group(0)))
-                return
+                notes = json.loads(m.group(0))
             except (AttributeError, json.JSONDecodeError):
                 continue
-        print(f"  could not write notes for {p['id']}; it will be skipped")
+            if len(notes.get("sections", [])) == len(secs):
+                save_json(work / "notes" / f"{r['id']}.json", notes)
+                return
+        print(f"  could not write notes for {r['id']}; its sections will be skipped")
 
-    pmap(one, todo, workers_for(cfg, cfg["notes_model"]))
-    print(f"Notes ready: {sum(1 for p in pieces(work) if p['notes'])} of {len(pieces(work))}.")
+    pmap(one, rows, workers_for(cfg, cfg["notes_model"]))
+    print(f"Notes ready: {len(cases(work, 'tune'))} tuning and {len(cases(work, 'test'))} held-out sections.")
 
 
 def cmd_baseline(a):
-    """Do the writer's guides beat no guides at all? Answered on the tune and test pieces before tuning."""
+    """Do the writer's guides beat no guides at all? Answered on every section before tuning."""
     work = Path(a.work).expanduser()
     cfg, models = load_cfg(work), Models(work)
-    items = pieces(work, "tune+test")
+    items = cases(work, "tune+test")
     if not items:
-        sys.exit("No pieces with notes: run `notes` first.")
+        sys.exit("No sections with notes: run `notes` first.")
     seed, lad = guides(work / "seed"), Ladders(work)
-    print(f"Do the guides beat no guides? {len(items)} pieces, writer {cfg['writer']}, judge {cfg['judge']}")
+    print(f"Do the guides beat no guides? {len(items)} sections, writer {cfg['writer']}, judge {cfg['judge']}")
     orig = pin_seed(models, cfg, lad, seed, items)
-    none = place_guides(models, cfg, lad, None, "no guides", items, versus=lambda p: [orig[p["id"]]])
-    per = {p["id"]: lad.head_to_head(p["id"], orig[p["id"]], none[p["id"]]) for p in items}
+    none = place_guides(models, cfg, lad, None, "no guides", items, versus=lambda c: [orig[c["id"]]])
+    per = {c["id"]: lad.head_to_head(c["id"], orig[c["id"]], none[c["id"]]) for c in items}
     t = tally([s if s is not None else 0.5 for s in per.values()])
-    out = {**t, "per_piece": per, "date": dt.date.today().isoformat()}
+    out = {**t, "per_section": per, "date": dt.date.today().isoformat()}
     save_json(work / "baseline.json", out)
     print(f"  original guides vs no guides: {t['line']}")
     if t["closer"] <= t["further"]:
         print("  The guides do not yet make drafts sound more like the writer than no guides do. Tuning starts\n"
-              "  from here, but say so plainly: the first job is guides that beat nothing at all.")
+              "  from here, but say so plainly: the first job is a voice guide that beats nothing at all.")
     return out
 
 
@@ -803,55 +845,54 @@ def cmd_optimize(a):
     if not (work / "baseline.json").exists():
         cmd_baseline(a)
     seed = guides(work / "seed")
-    tune, study_pool = pieces(work, "tune"), pieces(work, "learn")
+    tune = cases(work, "tune")
+    study_pool = [work / "pieces" / f"{r['id']}.md" for r in json.loads((work / "manifest.json").read_text())
+                  if r["split"] == "learn"]
     if not tune:
-        sys.exit("No tuning pieces with notes: run `notes` first.")
+        sys.exit("No tuning sections with notes: run `notes` first.")
     lad = Ladders(work)
     hist_path = work / "history.json"
     history = json.loads(hist_path.read_text()) if hist_path.exists() else []
 
     def drafts_of(g):
-        return {p["id"]: draft(models, g, p, cfg["writer"]) for p in tune}  # cached after the first time
+        return dict(zip((c["id"] for c in tune),
+                        pmap(lambda c: draft(models, g, c, cfg["writer"]), tune, cfg["workers"])))
 
     def score(texts):
         return mean([r for r in standing(lad, texts).values() if r is not None])
 
-    def notes(texts, limit=8):
+    def notes(texts, limit=10):
         rows = sorted(standing(lad, texts).items(), key=lambda kv: kv[1])
-        out = []
-        for pid, r in rows[:limit]:
-            n = (lad.notes(pid, texts[pid]) or [{}])[0]
-            out.append(f"- [{pid}] Elo {r:.0f}\n  Voice: {n.get('voice') or '-'}\n  Style: {n.get('style') or '-'}")
-        return "\n".join(out)
+        return "\n".join(f"- [{cid}] Elo {r:.0f}: {(lad.notes(cid, texts[cid]) or [{}])[0].get('voice') or '-'}"
+                         for cid, r in rows[:limit])
 
     def log():
-        return "\n".join(["round\telo\tstatus\ttarget\thypothesis"] + [
-            f"{h['round']}\t{h['score']:.0f}\t{h['status']}\t{h['target']}\t{h['hypothesis']}" for h in history])
+        return "\n".join(["round\telo\tstatus\thypothesis"] + [
+            f"{h['round']}\t{h['score']:.0f}\t{h['status']}\t{h['hypothesis']}" for h in history])
 
     def save():
         save_json(hist_path, history)
         (work / "results.tsv").write_text(log() + "\n")
         (work / "best").mkdir(exist_ok=True)
         (work / "best" / "VOICE.md").write_text(history[-1]["best"]["voice"])
-        (work / "best" / "STYLE.md").write_text(history[-1]["best"]["style"])
 
-    # The original guides' drafts are pinned at 1000 on every tuning piece's ladder, and the
+    # The original guides' drafts are pinned at 1000 on every tuning section's ladder, and the
     # no-guides drafts from `baseline` are already on it, so every rating reads against both.
     pin_seed(models, cfg, lad, seed, tune)
     if not history:
-        history.append({"round": 0, "score": ANCHOR, "status": "seed", "target": "-", "removed": "",
-                        "hypothesis": "the writer's original guides", "guides": seed, "best": seed})
+        history.append({"round": 0, "score": ANCHOR, "status": "seed", "removed": "",
+                        "hypothesis": "the writer's original VOICE.md", "best": seed})
         save()
     best = history[-1]["best"]
     best_texts = drafts_of(best)
-    last_attempt = ""
-    stale = 0
+    last_attempt, stale = "", 0
     for h in reversed(history[1:]):
         if h["status"] == "keep":
             break
         stale += 1
     rng = random.Random(len(history))
-    print(f"Tuning for {cfg['writer']}: starting at round {len(history)}, best Elo {score(best_texts):.0f}")
+    print(f"Tuning VOICE.md for {cfg['writer']} on {len(tune)} sections: starting at round {len(history)}, "
+          f"best Elo {score(best_texts):.0f}")
     for r in range(len(history), a.rounds + 1):
         if a.patience and stale >= a.patience:
             print(f"Stopping: {stale} rounds without improvement (--patience {a.patience}).")
@@ -861,16 +902,13 @@ def cmd_optimize(a):
         prompt = PROGRAM.format(name=cfg["name"], writer=cfg["writer"]) + "\n\n" + TURN.format(
             log=log(), best_score=best_score, voice=best["voice"], style=best["style"],
             notes=notes(best_texts), last_attempt=last_attempt,
-            study="\n\n".join(f"<notes>\n{render_notes(p)}\n</notes>\n<real_piece>\n{p['gold']}\n</real_piece>"
-                              for p in study))
+            study="\n\n".join(f"<real_piece>\n{p.read_text()}\n</real_piece>" for p in study))
         reply = models.chat(cfg["optimizer"], prompt, sample=r)
         v = re.search(r"<voice_md>\s*(.*?)\s*</voice_md>", reply, re.S)
-        s = re.search(r"<style_md>\s*(.*?)\s*</style_md>", reply, re.S)
-        if not (v and s):
-            print(f"  round {r}: the optimizer returned no guides; skipping")
+        if not v:
+            print(f"  round {r}: the optimizer returned no VOICE.md; skipping")
             continue
-        cand = {"voice": best["voice"] if v.group(1).strip() == "UNCHANGED" else v.group(1) + "\n",
-                "style": best["style"] if s.group(1).strip() == "UNCHANGED" else s.group(1) + "\n"}
+        cand = {"voice": v.group(1) + "\n", "style": best["style"]}
         if cand == best:
             print(f"  round {r}: no change proposed; skipping")
             continue
@@ -878,8 +916,6 @@ def cmd_optimize(a):
         hyp = re.sub(r"\s+", " ", m_hyp.group(1)).strip() if m_hyp else ""
         m_rem = re.search(r"<removed>(.*?)</removed>", reply, re.S)
         removed = m_rem.group(1).strip() if m_rem and m_rem.group(1).strip().lower() != "none" else ""
-        target = "+".join(k for k in ("voice", "style") if cand[k] != best[k])
-        entry = {"round": r, "target": target, "hypothesis": hyp, "removed": removed, "guides": cand}
         cand_texts = place_guides(models, cfg, lad, cand, f"round {r}", tune)
         # Ratings move as new games refit the ladders, so compare both versions as they stand now.
         cand_score, best_score = score(cand_texts), score(best_texts)
@@ -889,15 +925,15 @@ def cmd_optimize(a):
             best, best_texts, last_attempt = cand, cand_texts, ""
         else:
             last_attempt = (f"\n## Last experiment (reverted, Elo {cand_score:.0f})\nHypothesis: {hyp}\n"
-                            f"Judge notes on its drafts:\n{notes(cand_texts, 4)}\n")
-        history.append({**entry, "score": cand_score, "best_score": max(cand_score, best_score),
-                        "status": "keep" if kept else "discard", "best": best})
+                            f"Judge notes on its drafts:\n{notes(cand_texts, 5)}\n")
+        history.append({"round": r, "score": cand_score, "status": "keep" if kept else "discard",
+                        "hypothesis": hyp, "removed": removed, "voice": cand["voice"], "best": best})
         save()
-        print(f"  round {r}: Elo {cand_score:.0f} vs best {best_score:.0f} ({'keep' if kept else 'discard'}, "
-              f"{target}) | {hyp[:90]}")
+        print(f"  round {r}: Elo {cand_score:.0f} vs best {best_score:.0f} ({'keep' if kept else 'discard'}) "
+              f"| {hyp[:90]}")
     final = score(best_texts)
-    save_json(work / "standing.json", {"best_elo": final, "per_piece": standing(lad, best_texts)})
-    print(f"Best guides: {work / 'best'} (Elo {final:.0f} on the tuning pieces; the original guides are 1000)")
+    save_json(work / "standing.json", {"best_elo": final, "per_section": standing(lad, best_texts)})
+    print(f"Best VOICE.md: {work / 'best'} (Elo {final:.0f} on the tuning sections; the original is 1000)")
 
 
 def cmd_evaluate(a):
@@ -905,22 +941,25 @@ def cmd_evaluate(a):
     cfg, models = load_cfg(work), Models(work)
     if not (work / "best" / "VOICE.md").exists():
         sys.exit("Run `optimize` first.")
-    tuned, seed = guides(work / "best"), guides(work / "seed")
-    test, lad = pieces(work, "test"), Ladders(work)
-    print(f"Held-out test: {len(test)} pieces, writer {cfg['writer']}, judge {cfg['judge']}")
+    seed = guides(work / "seed")
+    tuned = {"voice": (work / "best" / "VOICE.md").read_text(), "style": seed["style"]}
+    test, lad = cases(work, "test"), Ladders(work)
+    print(f"Held-out test: {len(test)} sections of {len({c['piece'] for c in test})} pieces, "
+          f"writer {cfg['writer']}, judge {cfg['judge']}")
     orig = pin_seed(models, cfg, lad, seed, test)
-    none = place_guides(models, cfg, lad, None, "no guides", test, versus=lambda p: [orig[p["id"]]])
+    none = place_guides(models, cfg, lad, None, "no guides", test, versus=lambda c: [orig[c["id"]]])
     mine = place_guides(models, cfg, lad, tuned, "tuned guides", test,
-                        versus=lambda p: [orig[p["id"]], none[p["id"]]])
-    out = {"writer": cfg["writer"], "judge": cfg["judge"], "n": len(test), "date": dt.date.today().isoformat()}
+                        versus=lambda c: [orig[c["id"]], none[c["id"]]])
+    out = {"writer": cfg["writer"], "judge": cfg["judge"], "n": len(test),
+           "pieces": len({c["piece"] for c in test}), "date": dt.date.today().isoformat()}
     for label, opp in (("original guides", orig), ("no guides", none)):
-        per = {p["id"]: lad.head_to_head(p["id"], mine[p["id"]], opp[p["id"]]) for p in test}
+        per = {c["id"]: lad.head_to_head(c["id"], mine[c["id"]], opp[c["id"]]) for c in test}
         t = tally([s if s is not None else 0.5 for s in per.values()])
-        out[label] = {**t, "per_piece": per}
+        out[label] = {**t, "per_section": per}
         print(f"  tuned vs {label}: {t['line']}")
-    out["elo"] = {label: mean([lad.rating(pid, t) for pid, t in texts.items()])
+    out["elo"] = {label: mean([lad.rating(cid, t) for cid, t in texts.items()])
                   for label, texts in (("original guides", orig), ("no guides", none), ("tuned guides", mine))}
-    print("  Elo on held-out pieces: " + ", ".join(f"{k} {v:.0f}" for k, v in out["elo"].items()))
+    print("  Elo on held-out sections: " + ", ".join(f"{k} {v:.0f}" for k, v in out["elo"].items()))
     save_json(work / "eval.json", out)
 
 
@@ -940,7 +979,7 @@ def rule_changes(old, new):
 def cmd_propose(a):
     work = Path(a.work).expanduser()
     cfg = load_cfg(work)
-    seed, tuned = guides(work / "seed"), guides(work / "best")
+    seed, tuned = guides(work / "seed")["voice"], (work / "best" / "VOICE.md").read_text()
     history = json.loads((work / "history.json").read_text())
 
     def opt(name):
@@ -949,19 +988,16 @@ def cmd_propose(a):
     base, ev, st = opt("baseline.json"), opt("eval.json"), opt("standing.json")
     prop = work / "proposed"
     prop.mkdir(exist_ok=True)
-    (prop / "VOICE.md").write_text(tuned["voice"])
-    (prop / "STYLE.md").write_text(tuned["style"])
-    diff = "".join(
-        "".join(difflib.unified_diff(seed[k].splitlines(True), tuned[k].splitlines(True),
-                                     f"original/{f}", f"tuned/{f}"))
-        for k, f in (("voice", "VOICE.md"), ("style", "STYLE.md")))
-    (prop / "changes.diff").write_text(diff)
+    (prop / "VOICE.md").write_text(tuned)
+    (prop / "changes.diff").write_text("".join(difflib.unified_diff(
+        seed.splitlines(True), tuned.splitlines(True), "original/VOICE.md", "tuned/VOICE.md")))
     kept = [h for h in history if h["status"] == "keep"]
-    lines = [f"# Tuning report: {cfg['name']}", "",
-             f"Tuned for **{cfg['writer']}** (judge {cfg['judge']}, optimizer {cfg['optimizer']}).", "",
+    lines = [f"# Voice tuning report: {cfg['name']}", "",
+             f"VOICE.md tuned for **{cfg['writer']}** (judge {cfg['judge']}, optimizer {cfg['optimizer']}), "
+             "a section at a time. STYLE.md was not changed.", "",
              "## Do your original guides beat no guides?", ""]
     if base:
-        lines.append(f"Drafts with your original guides against drafts with no guides, on {base['n']} pieces: "
+        lines.append(f"Drafts with your original guides against drafts with no guides, on {base['n']} sections: "
                      f"{base['line']}.")
         if base["closer"] <= base["further"]:
             lines.append("Your guides did not yet make drafts sound more like you than no guides at all.")
@@ -969,33 +1005,31 @@ def cmd_propose(a):
         lines.append("Not measured: run `baseline`.")
     lines += ["", "## Held-out result", ""]
     if ev:
-        lines += [f"On {ev['n']} pieces nothing was tuned on, the tuned guides' drafts against:",
+        lines += [f"On {ev['n']} sections from {ev['pieces']} pieces nothing was tuned on, drafts with the tuned "
+                  "VOICE.md against:",
                   f"- your original guides: {ev['original guides']['line']}",
                   f"- no guides: {ev['no guides']['line']}",
                   "- Elo: " + ", ".join(f"{k} {v:.0f}" for k, v in ev["elo"].items())]
         if ev["n"] < 10:
-            lines.append(f"\n{ev['n']} pieces is a small test: read these as counts, not as a rate.")
+            lines.append(f"\n{ev['n']} sections is a small test: read these as counts, not as a rate.")
     else:
         lines.append("Not run yet: run `evaluate`.")
     lines += ["", "## Every rule removed or reworded", ""]
-    changes = [(f, c) for k, f in (("voice", "VOICE.md"), ("style", "STYLE.md")) for c in rule_changes(seed[k], tuned[k])]
+    changes = rule_changes(seed, tuned)
     if changes:
-        lines.append("Check each one. Some may be rules you wrote on purpose.")
-        lines.append("")
-        for f, (kind, old, new) in changes:
-            lines.append(f"- **{kind}** in {f}: \"{old}\"" + (f"\n  now: \"{new}\"" if new else ""))
+        lines += ["Check each one. Some may be rules you wrote on purpose.", ""]
+        lines += [f"- **{kind}**: \"{old}\"" + (f"\n  now: \"{new}\"" if new else "") for kind, old, new in changes]
     else:
-        lines.append("None: every line of your guides is still there.")
+        lines.append("None: every line of your VOICE.md is still there.")
     reasons = [h for h in kept if h.get("removed")]
     if reasons:
         lines += ["", "The optimizer's reasons:", ""] + [f"- round {h['round']}: {h['removed']}" for h in reasons]
     lines += ["", "## Changes that were kept", "",
               f"{len(history) - 1} rounds, {len(kept)} kept"
-              + (f"; best Elo {st['best_elo']:.0f} on the tuning pieces (your original guides are 1000)" if st else ""),
-              ""]
-    lines += [f"{i}. ({h['target']}, round {h['round']}, Elo {h['score']:.0f}) {h['hypothesis']}"
-              for i, h in enumerate(kept, 1)] or ["None: no change beat the original guides."]
-    lines += ["", "The full proposed files are in this folder; `changes.diff` shows every line that changed.",
+              + (f"; best Elo {st['best_elo']:.0f} on the tuning sections (your original is 1000)" if st else ""), ""]
+    lines += [f"{i}. (round {h['round']}, Elo {h['score']:.0f}) {h['hypothesis']}" for i, h in enumerate(kept, 1)] \
+        or ["None: no change beat the original VOICE.md."]
+    lines += ["", "The proposed VOICE.md is in this folder; `changes.diff` shows every line that changed.",
               "Nothing in the writing home has changed. Run `adopt` once the writer approves."]
     (prop / "REPORT.md").write_text("\n".join(lines) + "\n")
     print(f"Proposal: {prop}\n" + (prop / "REPORT.md").read_text())
@@ -1007,28 +1041,25 @@ def cmd_adopt(a):
     home, prop = Path(cfg["home"]), work / "proposed"
     if not (prop / "VOICE.md").exists():
         sys.exit("Run `propose` first.")
-    seed = guides(work / "seed")
-    live = guides(home)
-    if live != seed and not a.force:
-        sys.exit("The live VOICE.md or STYLE.md changed since this run started. Merge by hand, or pass --force.")
-    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup = work / f"previous-{stamp}"
+    if (home / "VOICE.md").read_text() != (work / "seed" / "VOICE.md").read_text() and not a.force:
+        sys.exit("The live VOICE.md changed since this run started. Merge by hand, or pass --force.")
+    backup = work / f"previous-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}"
     backup.mkdir()
-    for f in ("VOICE.md", "STYLE.md"):
-        shutil.copy(home / f, backup / f)
-        shutil.copy(prop / f, home / f)
-    print(f"Adopted the tuned guides into {home}. The previous versions are in {backup}.")
+    shutil.copy(home / "VOICE.md", backup / "VOICE.md")
+    shutil.copy(prop / "VOICE.md", home / "VOICE.md")
+    print(f"Adopted the tuned VOICE.md into {home}. The previous version is in {backup}. STYLE.md is unchanged.")
 
 
 def cmd_status(a):
     work = Path(a.work).expanduser()
     cfg = load_cfg(work)
-    m = json.loads((work / "manifest.json").read_text())
-    nb = len(list((work / "notes").glob("*.json"))) if (work / "notes").exists() else 0
-    h = json.loads((work / "history.json").read_text()) if (work / "history.json").exists() else []
-    base = json.loads((work / "baseline.json").read_text()) if (work / "baseline.json").exists() else {}
-    ev = json.loads((work / "eval.json").read_text()) if (work / "eval.json").exists() else {}
-    print(f"{cfg['name']} for {cfg['writer']}: {len(m)} pieces, {nb} notes"
+
+    def opt(name):
+        p = work / name
+        return json.loads(p.read_text()) if p.exists() else None
+    h, base, ev = opt("history.json") or [], opt("baseline.json"), opt("eval.json")
+    print(f"{cfg['name']} for {cfg['writer']}: {len(cases(work, 'tune'))} tuning and "
+          f"{len(cases(work, 'test'))} held-out sections with notes"
           + (f"; guides vs no guides: {base['line']}" if base else "")
           + (f"; {len(h) - 1} round{'s' if len(h) != 2 else ''}, {sum(x['status'] == 'keep' for x in h)} kept" if h else "")
           + (f"; held-out vs original: {ev['original guides']['line']}" if ev else ""))
@@ -1038,18 +1069,20 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("prepare", help="copy the guides as the seed, split the writer's pieces, check the CLIs")
+    p = sub.add_parser("prepare", help="copy the guides, split and section the writer's pieces, check the CLIs")
     p.add_argument("--home", required=True, help="the writing home holding VOICE.md and STYLE.md")
     p.add_argument("--corpus", required=True, help="folder of the writer's own pieces, one .md/.txt file each")
     p.add_argument("--name", required=True, help="the writer's name")
-    p.add_argument("--writer", required=True, help="the model the guides are tuned for, e.g. claude:claude-opus-5-5")
+    p.add_argument("--writer", required=True, help="the model VOICE.md is tuned for, e.g. claude:claude-opus-5-5")
     p.add_argument("--work", help="run folder (default: <home>/tuning/<writer>)")
     p.add_argument("--judge", default="claude:claude-opus-5-5")
     p.add_argument("--optimizer", default="claude:claude-opus-5-5", help="proposes the edits")
-    p.add_argument("--notes-model", default="claude:claude-sonnet-5-5", help="writes the notes for each piece")
+    p.add_argument("--notes-model", default="claude:claude-sonnet-5-5", help="writes the notes for each section")
     p.add_argument("--workers", type=int, default=4)
-    p.add_argument("--test", type=int)
-    p.add_argument("--tune", type=int)
+    p.add_argument("--test", type=int, help="pieces held out (default about 30%%, at most 10)")
+    p.add_argument("--learn", type=int, help="pieces the optimizer reads for study (default 2)")
+    p.add_argument("--tune-sections", type=int, default=20, help="sections scored each round (default 20)")
+    p.add_argument("--test-sections", type=int, default=40, help="held-out sections (default 40)")
     p.add_argument("--min-words", type=int, default=300)
     p.add_argument("--max-words", type=int, default=8000)
     p.add_argument("--seed", type=int, default=0)
@@ -1058,16 +1091,16 @@ def main():
     p.set_defaults(fn=cmd_prepare)
 
     for name, fn, hlp in (("check", cmd_check, "check each CLI is installed, signed in and not billing an API key"),
-                          ("notes", cmd_notes, "write the writer's notes for each piece"),
+                          ("notes", cmd_notes, "write the writer's notes for each section"),
                           ("baseline", cmd_baseline, "do the original guides beat no guides?"),
-                          ("evaluate", cmd_evaluate, "the tuned guides against the original and no guides, held out"),
-                          ("propose", cmd_propose, "write the tuned guides, a diff and a report for review"),
+                          ("evaluate", cmd_evaluate, "the tuned VOICE.md against the original and no guides, held out"),
+                          ("propose", cmd_propose, "write the tuned VOICE.md, a diff and a report for review"),
                           ("status", cmd_status, "show progress")):
         p = sub.add_parser(name, help=hlp)
         p.add_argument("--work", required=True)
         p.set_defaults(fn=fn)
 
-    p = sub.add_parser("optimize", help="autoresearch VOICE.md and STYLE.md, scored by the Elo ratchet")
+    p = sub.add_parser("optimize", help="autoresearch VOICE.md, scored by the Elo ratchet")
     p.add_argument("--work", required=True)
     p.add_argument("--rounds", type=int, default=10)
     p.add_argument("--patience", type=int, default=0,
@@ -1075,9 +1108,9 @@ def main():
     p.add_argument("--skip-check", action="store_true", help="skip the sign-in and billing check")
     p.set_defaults(fn=cmd_optimize)
 
-    p = sub.add_parser("adopt", help="replace the live guides with the proposal, keeping a backup")
+    p = sub.add_parser("adopt", help="replace the live VOICE.md with the proposal, keeping a backup")
     p.add_argument("--work", required=True)
-    p.add_argument("--force", action="store_true", help="adopt even if the live guides changed during the run")
+    p.add_argument("--force", action="store_true", help="adopt even if the live VOICE.md changed during the run")
     p.set_defaults(fn=cmd_adopt)
 
     a = ap.parse_args()

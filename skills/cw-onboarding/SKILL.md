@@ -101,4 +101,4 @@ Confirm:
 - which gaps remain intentionally open;
 - how future Compound Writing skills will load the writing home.
 
-When the writer has eight or more finished pieces of their own, mention once that `cw-tune` can later test these guides against that work and tune them for the model they draft with. It is optional; do not start it unasked.
+When the writer has six or more finished pieces of their own, mention once that `cw-tune` can later test these guides against that work and tune `VOICE.md` for the model they draft with. It is optional; do not start it unasked.
