@@ -3,14 +3,26 @@
 
 The writer's existing guides are the baseline. Each step:
 
-  prepare   copy the guides as the seed, load the writer's pieces, split them learn / tune / test
-  briefs    extract a style-free brief from every piece: the substance, none of the style
-  optimize  autoresearch: propose one change to VOICE.md and/or STYLE.md, draft the tuning
-            pieces from their briefs with the candidate guides, and keep the change only if a
-            blind judge more often finds the drafts closer to the writer's real pieces
-  evaluate  the tuned guides against the original guides on held-out pieces
-  propose   write the tuned guides, a diff and a report into the run folder for review
+  prepare   copy the guides as the seed, load the writer's pieces, split them learn / tune / test,
+            then run `check`
+  check     confirm each CLI is installed, signed in and on the writer's subscription, not an API key
+  briefs    extract a style-free brief from every piece: the substance, none of the style, and
+            re-extract any brief that copies runs of the writer's wording
+  baseline  do the writer's guides beat no guides at all? Answered before any tuning
+  optimize  autoresearch scored by an Elo ratchet: propose one change to VOICE.md and/or STYLE.md,
+            draft the tuning pieces with it, and play each draft against that piece's ladder of
+            every draft written for it so far. Keep the change if its drafts rate higher
+  evaluate  the tuned guides head to head against the original guides and no guides, on held-out
+            pieces nothing was tuned on
+  propose   write the tuned guides, a diff and a report (every rule removed or reworded) for review
   adopt     after the writer approves, back up the live guides and replace them
+
+The metric is the Elo ratchet from the write-like-Mike experiment (the `ladder` metric in Every
+Checks, ArenaMetric in DSPy). A blind judge compares two drafts against the real piece, in both
+orders. Each piece keeps a ladder of every draft ever written for it; the original guides' draft is
+pinned at 1000. A new draft plays the piece's best draft first and steps down while it loses, then
+every rating on the piece is refit from all its games. The bar rises whenever something beats it,
+so the score has no ceiling and there is no "perfect" round to stop on.
 
 Model calls go through headless CLIs on the writer's own subscription. A model is named
 "<cli>:<model>": claude:claude-opus-5-5, codex:gpt-6.1-sol, agy:default ("default" uses the CLI's
@@ -26,6 +38,7 @@ import datetime as dt
 import difflib
 import hashlib
 import json
+import math
 import os
 import random
 import re
@@ -62,7 +75,8 @@ Rules:
 1. Substance, completely. Someone holding only the brief should be able to make every point the
    piece makes, in the same order, with the same evidence.
 2. No style. No verbatim run longer than five words, except proper names, titles, numbers and
-   technical terms. Do not describe tone, voice, humor or rhythm.
+   technical terms. Paraphrase every sentence you summarise, the opening and closing lines
+   included. Do not describe tone, voice, humor or rhythm.
 3. No rhetorical devices. Leave out the hook, jokes, asides, metaphors, coined phrases, rhetorical
    questions and the closing flourish. If an anecdote or analogy is part of the argument, keep it
    as a neutral fact.
@@ -123,9 +137,12 @@ experiment per turn: form a hypothesis about what would make drafts read more li
 writing, edit VOICE.md and/or STYLE.md to test it, and the harness evaluates it. If the score
 beats the current best it is kept; otherwise it is reverted.
 
-How the guides are used: both files are given to {writer} as its instructions, with a brief that
-carries the substance of a piece (topic, thesis, outline, facts, the author's experiences) and none
-of the style. The guides must supply everything about how {name} writes.
+How the guides are used for real: {name} drafts with {writer} from their own notes, outlines,
+conversations or a rough draft, with no brief. The brief in this test is only scaffolding that
+supplies the substance of a past piece so drafts can be compared with it. So the guides must stand
+alone: they supply everything about how {name} writes, and they never mention a brief, a judge, a
+reference piece, drafts A and B, or anything else about this test. A rule that only makes sense
+inside the test is a failed experiment.
 
 Keep the boundary between the files. It is how the writer maintains them:
 - VOICE.md: how sentences sound. Syntax, diction and tone: cadence, rhythm, register,
@@ -136,23 +153,27 @@ If a rule changes wording, sentence construction or tone, it goes in VOICE.md. I
 claim, support, organisation or standard of the piece, it goes in STYLE.md. Split mixed rules.
 The judge's voice notes usually point at VOICE.md and its style notes at STYLE.md.
 
-These are the writer's own files. Keep their existing structure and headings, keep rules that are
-working, and prefer adding, sharpening or replacing specific rules over rewriting everything. Back
-material rules with a short cue of the observed move rather than long quotations, and never turn
-the writer's sentences into a phrase bank to copy.
+These are the writer's own files, and many rules in them are deliberate choices, not guesses. Keep
+their existing structure and headings, keep rules that are working, and prefer adding, sharpening
+or replacing specific rules over rewriting everything. Remove or reverse a rule the writer wrote
+only when the judge's notes clearly show it pulls drafts away from their real writing, and list
+every rule you remove or reverse in <removed> with the reason. Back material rules with a short cue
+of the observed move rather than long quotations, and never turn the writer's sentences into a
+phrase bank to copy.
 
-About the score: each tuning brief is drafted with your guides, and a blind judge compares the
-draft with the real piece and with a fixed comparison draft written with the writer's original
-guides. The score is the fraction of briefs where your draft is judged closer to the real piece
-(0.5 on a split decision; the original guides score 0.5). Look for general patterns in the judge's
-notes rather than patching individual pieces. Change one idea at a time when you can.
-Simplifications that keep the score are good. If recent experiments failed, try a different
-direction."""
+About the score: it is an Elo rating, the chess kind. Every tuning piece keeps a ladder of every
+draft ever written for it. The draft written with the writer's original guides is fixed at 1000; a
+new draft plays the best draft on the ladder first, steps down while it loses, and is rated from
+those games. The score is the mean rating across tuning pieces. There is no ceiling: once a version
+of the guides is kept, its drafts become the bar the next experiment has to beat. Look for general
+patterns in the judge's notes rather than patching individual pieces. Change one idea at a time
+when you can. Simplifications that keep the score are good. If recent experiments failed, try a
+different direction."""
 
 TURN = """## Experiment log
 {log}
 
-## Current best guides (score {best_score:.3f})
+## Current best guides (Elo {best_score:.0f})
 <VOICE.md>
 {voice}
 </VOICE.md>
@@ -161,22 +182,28 @@ TURN = """## Experiment log
 {style}
 </STYLE.md>
 
-## Judge notes on the current best guides' drafts (lowest-scoring first)
+## Judge notes on the current best guides' drafts (lowest-rated first)
 {notes}
 {last_attempt}
 ## Real pieces from the learning set, for study
 {study}
 
 Propose the next experiment. Reply in exactly this format. Give each file you change in full; write
-UNCHANGED inside the tags of a file you leave as it is.
+UNCHANGED inside the tags of a file you leave as it is, and "none" inside <removed> if you removed
+or reversed nothing.
 <hypothesis>one or two sentences</hypothesis>
 <target>voice, style or both</target>
+<removed>each rule removed or reversed, one per line, with the reason</removed>
 <voice_md>
 the complete VOICE.md, or UNCHANGED
 </voice_md>
 <style_md>
 the complete STYLE.md, or UNCHANGED
 </style_md>"""
+
+# Words that only make sense inside the test. A candidate that adds them is rejected unscored.
+TEST_ONLY = re.compile(r"\b(?:the|a|each|this|every|your) brief\b|\bbriefs\b|\bjudge[sd]?\b|"
+                       r"\breference piece\b|\bdraft [AB]\b", re.I)
 
 # ---------------------------------------------------------------- model calls
 
@@ -307,6 +334,54 @@ def workers_for(cfg, *specs):
     return cfg["workers"]
 
 
+# ---------------------------------------------------------------- sign-in and billing check
+
+def preflight(cfg, models):
+    """Before a long run: every CLI installed, signed in, and billing the writer's subscription."""
+    problems = []
+    specs = sorted({cfg[k] for k in ("writer", "judge", "optimizer", "brief_model")})
+    for spec in specs:
+        backend, _, model = spec.partition(":")
+        exe = {"claude": "claude", "codex": "codex", "agy": "agy"}.get(backend)
+        if not exe:
+            problems.append(f"{spec}: unknown CLI; use claude:<model>, codex:<model> or agy:<model>")
+            continue
+        if not shutil.which(exe):
+            problems.append(f"{spec}: `{exe}` is not installed")
+            continue
+        if backend == "claude" and os.environ.get("ANTHROPIC_API_KEY"):
+            problems.append("ANTHROPIC_API_KEY is set, so `claude -p` would bill that API key instead of the "
+                            "writer's subscription. Unset it for this run.")
+        if backend == "codex":
+            for var in ("CODEX_API_KEY", "OPENAI_API_KEY"):
+                if os.environ.get(var):
+                    problems.append(f"{var} is set, so `codex exec` may bill that API key. Unset it for this run.")
+            auth_file = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
+            try:
+                auth = json.loads(auth_file.read_text())
+            except (OSError, json.JSONDecodeError):
+                auth = {}
+            if str(auth.get("auth_mode", "")).lower() in ("apikey", "api_key") or (
+                    auth.get("OPENAI_API_KEY") and not auth.get("tokens")):
+                problems.append("Codex is signed in with an API key, so every call would be billed to it. "
+                                "Run `codex login` with the writer's ChatGPT account first.")
+        print(f"  checking {spec}...")
+        try:
+            fn = {"claude": models._claude, "codex": models._codex, "agy": models._agy}[backend]
+            fn(model, "", "Reply with the single word OK.", attempts=1)
+        except Exception as e:  # noqa: BLE001 - any failure here means the long run would fail too
+            problems.append(f"{spec}: a test call failed ({str(e)[:200]}). Sign in to `{exe}` and try again.")
+    return problems
+
+
+def run_check(cfg, models):
+    problems = preflight(cfg, models)
+    if problems:
+        print("Fix these before the long steps, then run `check` again:\n" + "\n".join(f"- {p}" for p in problems))
+        sys.exit(3)
+    print("All CLIs are installed, signed in and on a subscription.")
+
+
 # ---------------------------------------------------------------- run folder
 
 def slugify(s):
@@ -336,7 +411,7 @@ def system_for(g):
 def pieces(work, split=None):
     out = []
     for row in json.loads((work / "manifest.json").read_text()):
-        if split and row["split"] != split:
+        if split and row["split"] not in split.split("+"):
             continue
         bp = work / "briefs" / f"{row['id']}.json"
         out.append({**row, "gold": (work / "pieces" / f"{row['id']}.md").read_text(),
@@ -378,7 +453,45 @@ def draft(models, g, p, writer):
     return models.chat(writer, WRITE_INSTRUCTION + render_brief(p), system=system_for(g) if g else "")
 
 
-# ---------------------------------------------------------------- judge (the eval metric)
+# ---------------------------------------------------------------- brief leak check
+
+def _words(text):
+    return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower())
+
+
+def _strings(obj):
+    if isinstance(obj, str):
+        yield obj
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            yield from _strings(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _strings(v)
+
+
+def leaks(brief, gold, n=6):
+    """Runs of n+ words the brief shares with the piece, merged into phrases. Rule 2 of the spec
+    allows names and titles, so a few hits can be fine; most are the writer's phrasing leaking in."""
+    gw = _words(gold)
+    grams = {tuple(gw[i:i + n]) for i in range(len(gw) - n + 1)}
+    found = []
+    for s in _strings(brief):
+        w = _words(s)
+        i = 0
+        while i <= len(w) - n:
+            if tuple(w[i:i + n]) in grams:
+                j = i + n
+                while j < len(w) and tuple(w[j - n + 1:j + 1]) in grams:
+                    j += 1
+                found.append(" ".join(w[i:j]))
+                i = j
+            else:
+                i += 1
+    return found
+
+
+# ---------------------------------------------------------------- judge
 
 def _parse_judge(text):
     m = re.search(r"\{.*\}", text, re.S)
@@ -410,29 +523,214 @@ def compare(models, judge, gold, a, b):
     return random.choice("AB"), {}
 
 
-def triad(models, judge, gold, candidate, opponent):
-    """Judge both orderings to cancel position bias. Returns a score in [0, 1] and the
-    judge's voice and style notes on the candidate."""
-    c1, o1 = compare(models, judge, gold, candidate, opponent)
-    c2, o2 = compare(models, judge, gold, opponent, candidate)
+def triad(models, judge, gold, x, y):
+    """Judge both orderings to cancel position bias. Returns x's score in [0, 1] (0.5 is a split:
+    the judge followed the position) and the judge's voice and style notes on each draft."""
+    c1, o1 = compare(models, judge, gold, x, y)
+    c2, o2 = compare(models, judge, gold, y, x)
     score = ((c1 == "A") + (c2 == "B")) / 2
-    voice = " ".join(x for x in (o1.get("A_voice", ""), o2.get("B_voice", "")) if x)
-    style = " ".join(x for x in (o1.get("A_style", ""), o2.get("B_style", "")) if x)
-    return score, voice, style
+
+    def notes(first, second):
+        return {k: " ".join(n for n in (o1.get(f"{first}_{k}", ""), o2.get(f"{second}_{k}", "")) if n)
+                for k in ("voice", "style")}
+    return score, notes("A", "B"), notes("B", "A")
 
 
-def score_guides(models, cfg, g, opponent, items):
-    """Draft each piece with both sets of guides and judge them. Opponent drafts are cached, so
-    a fixed opponent costs nothing after the first round."""
+# ---------------------------------------------------------------- the Elo ratchet (the eval metric)
+
+ANCHOR, PRIOR_SD, DEPTH = 1000.0, 800.0, 3
+_C = math.log(10) / 400
+
+
+def _expected(d):
+    return 1 / (1 + 10 ** (-d / 400))
+
+
+def _fit(results, start=ANCHOR):
+    """Rating from (opponent rating, score) pairs with a Gaussian prior at 1000; Newton steps."""
+    r = start
+    for _ in range(30):
+        g, h = -(r - ANCHOR) / PRIOR_SD ** 2, -1 / PRIOR_SD ** 2
+        for ro, s in results:
+            e = _expected(r - ro)
+            g += _C * (s - e)
+            h -= _C * _C * e * (1 - e)
+        step = max(-300.0, min(300.0, g / h))
+        r -= step
+        if abs(step) < 0.1:
+            break
+    return r
+
+
+def text_key(text):
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+class Ladders:
+    """Per piece, every draft ever written for it, each with an Elo rating and its games.
+
+    Settings from the write-like-Mike experiment (simulated per-piece ladders, Oct 2026): three
+    games, top-down, find a piece's true best draft about half the time against 8-19% for other
+    orders; every new draft starts from 1000; and ratings are refit from all games and compared as
+    they stand now, never as they were stored, so a kept change is judged on today's ladder."""
+
+    def __init__(self, work):
+        self.path, self.drafts = work / "ladders.json", work / "drafts"
+        self.drafts.mkdir(exist_ok=True)
+        self.data = json.loads(self.path.read_text()) if self.path.exists() else {}
+        self.lock, self.locks = threading.Lock(), {}
+
+    def save(self):
+        with self.lock:
+            save_json(self.path, self.data)
+
+    def _piece(self, pid):
+        with self.lock:
+            self.locks.setdefault(pid, threading.Lock())
+            return self.data.setdefault(pid, {"anchor": None, "drafts": {}, "games": []})
+
+    def _text(self, key):
+        return (self.drafts / f"{key}.md").read_text()
+
+    def _add(self, lad, text, label, rating):
+        key = text_key(text)
+        (self.drafts / f"{key}.md").write_text(text)
+        lad["drafts"][key] = {"labels": [label], "rating": rating}
+        return key
+
+    def pin(self, p, text, label):
+        """Fix the original guides' draft for this piece at 1000. Every rating is relative to it."""
+        lad = self._piece(p["id"])
+        with self.locks[p["id"]]:
+            if lad["anchor"] is None:
+                lad["anchor"] = self._add(lad, text, label, ANCHOR)
+
+    def rating(self, pid, text):
+        d = self.data.get(pid, {}).get("drafts", {}).get(text_key(text))
+        return None if d is None else d["rating"]
+
+    def notes(self, pid, text):
+        """The judge's notes on this draft from its games, nearest-rated opponent first."""
+        lad, key = self.data[pid], text_key(text)
+        out = []
+        for a, b, s, na, nb in lad["games"]:
+            if key in (a, b):
+                opp = b if key == a else a
+                out.append((abs(lad["drafts"][opp]["rating"] - lad["drafts"][key]["rating"]), na if key == a else nb))
+        return [n for _, n in sorted(out, key=lambda x: x[0])]
+
+    def _refit(self, lad):
+        for _ in range(6):
+            for d in lad["drafts"]:
+                if d == lad["anchor"]:
+                    continue
+                res = [(lad["drafts"][b]["rating"], s) for a, b, s, *_ in lad["games"] if a == d]
+                res += [(lad["drafts"][a]["rating"], 1 - s) for a, b, s, *_ in lad["games"] if b == d]
+                if res:
+                    lad["drafts"][d]["rating"] = _fit(res, start=lad["drafts"][d]["rating"])
+
+    @staticmethod
+    def _pick(lad, played, history, est):
+        """Top-down: the best draft first; while losing, step down in doubling steps; then the nearest rating."""
+        rating = {d: v["rating"] for d, v in lad["drafts"].items()}
+        pool = [d for d in rating if d not in played]
+        if not pool:
+            return None
+        ranked = sorted(rating, key=lambda d: -rating[d])
+        if not history:
+            return next(d for d in ranked if d in pool)
+        if all(s < 0.5 for _, s in history):
+            last = ranked.index(history[-1][0])
+            below = [d for d in ranked[min(len(ranked) - 1, last + 2 ** len(history) - 1):] if d in pool]
+            if below:
+                return below[0]
+        return min(pool, key=lambda d: abs(rating[d] - est))
+
+    def place(self, models, judge, p, text, label, versus=None, depth=DEPTH):
+        """Put a draft on the piece's ladder. It plays `depth` games top-down (or exactly the drafts in
+        `versus`), every rating on the piece is refit, and the games are returned as
+        (opponent key, score, notes on this draft)."""
+        lad, key = self._piece(p["id"]), text_key(text)
+        with self.locks[p["id"]]:
+            if lad["anchor"] is None:
+                sys.exit(f"{p['id']} has no anchor: pin the original guides' draft first.")
+            if key in lad["drafts"]:
+                if label not in lad["drafts"][key]["labels"]:
+                    lad["drafts"][key]["labels"].append(label)
+                if key == lad["anchor"]:
+                    return []
+            else:
+                self._add(lad, text, label, ANCHOR)
+            done = {b: s for a, b, s, *_ in lad["games"] if a == key}
+            done.update({a: 1 - s for a, b, s, *_ in lad["games"] if b == key})
+            played, history, out = set(done), [(o, s) for o, s in done.items()], []
+            targets = [text_key(v) for v in versus] if versus is not None else None
+            est = _fit([(lad["drafts"][o]["rating"], s) for o, s in history]) if history else ANCHOR
+            while True:
+                if targets is not None:
+                    opp = next((t for t in targets if t not in played and t != key), None)
+                else:
+                    opp = None if len(played) >= depth else self._pick(
+                        {**lad, "drafts": {d: v for d, v in lad["drafts"].items() if d != key}}, played, history, est)
+                if opp is None:
+                    break
+                played.add(opp)
+                s, mine, theirs = triad(models, judge, p["gold"], text, self._text(opp))
+                lad["games"].append([key, opp, s, mine, theirs])
+                history.append((opp, s))
+                out.append((opp, s, mine))
+                est = _fit([(lad["drafts"][o]["rating"], x) for o, x in history])
+            lad["drafts"][key]["rating"] = est
+            self._refit(lad)
+            return out
+
+    def head_to_head(self, pid, text, opp_text):
+        """x's score against y on this piece from their game: 1 closer, 0 further, 0.5 split."""
+        a, b = text_key(text), text_key(opp_text)
+        for x, y, s, *_ in self.data[pid]["games"]:
+            if (x, y) == (a, b):
+                return s
+            if (x, y) == (b, a):
+                return 1 - s
+        return None
+
+
+def tally(scores):
+    n = len(scores)
+    w = sum(s == 1.0 for s in scores)
+    l = sum(s == 0.0 for s in scores)
+    line = f"closer on {w} of {n}, further on {l}, {n - w - l} split"
+    if n >= 10:  # with fewer pieces a percentage reads as more certain than it is
+        line += f" ({sum(scores) / n:.0%} overall)"
+    return {"n": n, "closer": w, "further": l, "split": n - w - l, "line": line}
+
+
+def mean(xs):
+    return sum(xs) / len(xs) if xs else 0.0
+
+
+def place_guides(models, cfg, lad, g, label, items, versus=None):
+    """Draft each piece with these guides (None = no guides) and put the drafts on the ladders."""
     def one(p):
-        mine, theirs = draft(models, g, p, cfg["writer"]), draft(models, opponent, p, cfg["writer"])
-        s, voice, style = triad(models, cfg["judge"], p["gold"], mine, theirs)
-        return {"id": p["id"], "score": s, "voice": voice, "style": style}
-    return pmap(one, items, workers_for(cfg, cfg["writer"], cfg["judge"]))
+        text = draft(models, g, p, cfg["writer"])
+        lad.place(models, cfg["judge"], p, text, label, versus=versus(p) if versus else None)
+        return text
+    texts = pmap(one, items, workers_for(cfg, cfg["writer"], cfg["judge"]))
+    lad.save()
+    return dict(zip((p["id"] for p in items), texts))
 
 
-def mean(results):
-    return sum(r["score"] for r in results) / len(results) if results else 0.0
+def pin_seed(models, cfg, lad, seed, items):
+    texts = pmap(lambda p: draft(models, seed, p, cfg["writer"]), items, workers_for(cfg, cfg["writer"]))
+    for p, t in zip(items, texts):
+        lad.pin(p, t, "original guides")
+    lad.save()
+    return dict(zip((p["id"] for p in items), texts))
+
+
+def standing(lad, texts):
+    """Current ratings of one version's drafts: refits after later games move them, and this reads them now."""
+    return {pid: lad.rating(pid, t) for pid, t in texts.items()}
 
 
 # ---------------------------------------------------------------- steps
@@ -491,10 +789,19 @@ def cmd_prepare(a):
                          "publication": c["meta"].get("publication") or c["meta"].get("source") or "",
                          "date": c["meta"].get("date", "")})
     save_json(work / "manifest.json", manifest)
-    save_json(work / "config.json", {
-        "home": str(home), "name": a.name, "writer": a.writer, "judge": a.judge, "optimizer": a.optimizer,
-        "brief_model": a.brief_model, "workers": a.workers, "created": dt.date.today().isoformat()})
+    cfg = {"home": str(home), "name": a.name, "writer": a.writer, "judge": a.judge, "optimizer": a.optimizer,
+           "brief_model": a.brief_model, "workers": a.workers, "created": dt.date.today().isoformat()}
+    save_json(work / "config.json", cfg)
     print(f"Split: {n - test - tune} learn / {tune} tune / {test} test.\nRun folder: {work}")
+    if test < 10:
+        print(f"Note: {test} held-out pieces is a small test. Results will be reported as counts, not percentages.")
+    if not a.skip_check:
+        run_check(cfg, Models(work))
+
+
+def cmd_check(a):
+    work = Path(a.work).expanduser()
+    run_check(load_cfg(work), Models(work))
 
 
 def cmd_briefs(a):
@@ -502,40 +809,100 @@ def cmd_briefs(a):
     cfg, models = load_cfg(work), Models(work)
     todo = [p for p in pieces(work) if not p["brief"]]
     print(f"Extracting {len(todo)} briefs with {cfg['brief_model']}...")
+    leak_path = work / "briefs" / "leaks.json"
 
     def one(p):
-        prompt = (f"{BRIEF_SPEC}\n\nApproximate word count: {p['words']}\n\n<piece>\n{p['gold']}\n</piece>\n\n"
-                  "Return only the JSON object.")
-        for attempt in range(3):
+        base = (f"{BRIEF_SPEC}\n\nApproximate word count: {p['words']}\n\n<piece>\n{p['gold']}\n</piece>\n\n"
+                "Return only the JSON object.")
+        best, prompt = None, base
+        for attempt in range(4):
             m = re.search(r"\{.*\}", models.chat(cfg["brief_model"], prompt, sample=attempt), re.S)
             try:
-                save_json(work / "briefs" / f"{p['id']}.json", json.loads(m.group(0)))
-                return
+                brief = json.loads(m.group(0))
             except (AttributeError, json.JSONDecodeError):
                 continue
-        print(f"  could not extract a brief for {p['id']}; it will be skipped")
+            found = leaks(brief, p["gold"])
+            if best is None or len(found) < len(best[1]):
+                best = (brief, found)
+            if not found:
+                break
+            # Re-extract with the copied runs named, so the brief carries the substance and not the wording.
+            prompt = base + ("\n\nYour last attempt copied these runs of the author's own wording. Restate each "
+                             "in neutral words of your own (names and titles may stay):\n"
+                             + "\n".join(f"- {x}" for x in found[:20]))
+        if best is None:
+            print(f"  could not extract a brief for {p['id']}; it will be skipped")
+            return p["id"], None
+        save_json(work / "briefs" / f"{p['id']}.json", best[0])
+        return p["id"], best[1]
 
-    pmap(one, todo, workers_for(cfg, cfg["brief_model"]))
+    results = pmap(one, todo, workers_for(cfg, cfg["brief_model"]))
+    record = json.loads(leak_path.read_text()) if leak_path.exists() else {}
+    record.update({pid: found for pid, found in results if found is not None})
+    save_json(leak_path, record)
     print(f"Briefs ready: {sum(1 for p in pieces(work) if p['brief'])} of {len(pieces(work))}.")
+    leaky = {pid: f for pid, f in record.items() if f}
+    if leaky:
+        print(f"{len(leaky)} brief(s) still share runs of 6+ words with their piece. Names and titles are fine; "
+              f"anything else is the writer's phrasing and makes the test too easy. See {leak_path}:")
+        for pid, f in sorted(leaky.items()):
+            print(f"  {pid}: " + " | ".join(f[:3]) + (" ..." if len(f) > 3 else ""))
+
+
+def cmd_baseline(a):
+    """Do the writer's guides beat no guides at all? Answered on the tune and test pieces before tuning."""
+    work = Path(a.work).expanduser()
+    cfg, models = load_cfg(work), Models(work)
+    items = pieces(work, "tune+test")
+    if not items:
+        sys.exit("No pieces with briefs: run `briefs` first.")
+    seed, lad = guides(work / "seed"), Ladders(work)
+    print(f"Do the guides beat no guides? {len(items)} pieces, writer {cfg['writer']}, judge {cfg['judge']}")
+    orig = pin_seed(models, cfg, lad, seed, items)
+    none = place_guides(models, cfg, lad, None, "no guides", items, versus=lambda p: [orig[p["id"]]])
+    per = {p["id"]: lad.head_to_head(p["id"], orig[p["id"]], none[p["id"]]) for p in items}
+    t = tally([s if s is not None else 0.5 for s in per.values()])
+    out = {**t, "per_piece": per, "date": dt.date.today().isoformat()}
+    save_json(work / "baseline.json", out)
+    print(f"  original guides vs no guides: {t['line']}")
+    if t["closer"] <= t["further"]:
+        print("  The guides do not yet make drafts sound more like the writer than no guides do. Tuning starts\n"
+              "  from here, but say so plainly: the first job is guides that beat nothing at all.")
+    return out
 
 
 def cmd_optimize(a):
     work = Path(a.work).expanduser()
     cfg, models = load_cfg(work), Models(work)
+    if not a.skip_check:
+        run_check(cfg, models)
+    if not (work / "baseline.json").exists():
+        cmd_baseline(a)
     seed = guides(work / "seed")
     tune, study_pool = pieces(work, "tune"), pieces(work, "learn")
     if not tune:
         sys.exit("No tuning pieces with briefs: run `briefs` first.")
+    lad = Ladders(work)
     hist_path = work / "history.json"
     history = json.loads(hist_path.read_text()) if hist_path.exists() else []
 
-    def notes(results, limit=8):
-        return "\n".join(f"- [{r['id']}] score {r['score']:.2f}\n  Voice: {r['voice'] or '-'}\n  Style: {r['style'] or '-'}"
-                         for r in sorted(results, key=lambda r: r["score"])[:limit])
+    def drafts_of(g):
+        return {p["id"]: draft(models, g, p, cfg["writer"]) for p in tune}  # cached after the first time
+
+    def score(texts):
+        return mean([r for r in standing(lad, texts).values() if r is not None])
+
+    def notes(texts, limit=8):
+        rows = sorted(standing(lad, texts).items(), key=lambda kv: kv[1])
+        out = []
+        for pid, r in rows[:limit]:
+            n = (lad.notes(pid, texts[pid]) or [{}])[0]
+            out.append(f"- [{pid}] Elo {r:.0f}\n  Voice: {n.get('voice') or '-'}\n  Style: {n.get('style') or '-'}")
+        return "\n".join(out)
 
     def log():
-        return "\n".join(["round\tscore\tstatus\ttarget\thypothesis"] + [
-            f"{h['round']}\t{h['score']:.3f}\t{h['status']}\t{h['target']}\t{h['hypothesis']}" for h in history])
+        return "\n".join(["round\telo\tstatus\ttarget\thypothesis"] + [
+            f"{h['round']}\t{h['score']:.0f}\t{h['status']}\t{h['target']}\t{h['hypothesis']}" for h in history])
 
     def save():
         save_json(hist_path, history)
@@ -544,16 +911,15 @@ def cmd_optimize(a):
         (work / "best" / "VOICE.md").write_text(history[-1]["best"]["voice"])
         (work / "best" / "STYLE.md").write_text(history[-1]["best"]["style"])
 
-    # The writer's own guides are the seed and the fixed opponent, so every score reads as "how
-    # often these guides beat the ones you started with".
+    # The original guides' drafts are pinned at 1000 on every tuning piece's ladder, and the
+    # no-guides drafts from `baseline` are already on it, so every rating reads against both.
+    pin_seed(models, cfg, lad, seed, tune)
     if not history:
-        print(f"Drafting the tuning pieces with the original guides ({cfg['writer']})...")
-        history.append({"round": 0, "score": 0.5, "best_score": 0.5, "status": "seed", "target": "-",
+        history.append({"round": 0, "score": ANCHOR, "status": "seed", "target": "-", "removed": "",
                         "hypothesis": "the writer's original guides", "guides": seed, "best": seed})
         save()
-    best, best_score = history[-1]["best"], history[-1]["best_score"]
-    # Notes on the seed come from judging it against drafts with no guides at all.
-    best_results = score_guides(models, cfg, best, seed if best != seed else None, tune)
+    best = history[-1]["best"]
+    best_texts = drafts_of(best)
     last_attempt = ""
     stale = 0
     for h in reversed(history[1:]):
@@ -561,15 +927,16 @@ def cmd_optimize(a):
             break
         stale += 1
     rng = random.Random(len(history))
-    print(f"Tuning for {cfg['writer']}: starting at round {len(history)}, best {best_score:.3f}")
+    print(f"Tuning for {cfg['writer']}: starting at round {len(history)}, best Elo {score(best_texts):.0f}")
     for r in range(len(history), a.rounds + 1):
-        if best_score >= 1.0 or stale >= a.patience:
-            print(f"Stopping: {'perfect score' if best_score >= 1.0 else f'{stale} rounds without improvement'}.")
+        if a.patience and stale >= a.patience:
+            print(f"Stopping: {stale} rounds without improvement (--patience {a.patience}).")
             break
+        best_score = score(best_texts)
         study = rng.sample(study_pool, min(2, len(study_pool)))
         prompt = PROGRAM.format(name=cfg["name"], writer=cfg["writer"]) + "\n\n" + TURN.format(
             log=log(), best_score=best_score, voice=best["voice"], style=best["style"],
-            notes=notes(best_results), last_attempt=last_attempt,
+            notes=notes(best_texts), last_attempt=last_attempt,
             study="\n\n".join(f"<brief>\n{render_brief(p)}\n</brief>\n<real_piece>\n{p['gold']}\n</real_piece>"
                               for p in study))
         reply = models.chat(cfg["optimizer"], prompt, sample=r)
@@ -585,21 +952,40 @@ def cmd_optimize(a):
             continue
         m_hyp = re.search(r"<hypothesis>(.*?)</hypothesis>", reply, re.S)
         hyp = re.sub(r"\s+", " ", m_hyp.group(1)).strip() if m_hyp else ""
+        m_rem = re.search(r"<removed>(.*?)</removed>", reply, re.S)
+        removed = m_rem.group(1).strip() if m_rem and m_rem.group(1).strip().lower() != "none" else ""
         target = "+".join(k for k in ("voice", "style") if cand[k] != best[k])
-        results = score_guides(models, cfg, cand, seed, tune)
-        score = mean(results)
-        kept = score > best_score
+        entry = {"round": r, "target": target, "hypothesis": hyp, "removed": removed, "guides": cand}
+
+        added = [m.group(0) for m in TEST_ONLY.finditer(cand["voice"] + cand["style"])]
+        if len(added) > len(TEST_ONLY.findall(best["voice"] + best["style"])):
+            stale += 1
+            last_attempt = (f"\n## Last experiment (rejected unscored)\nHypothesis: {hyp}\nIt wrote rules about the "
+                            f"test itself ({', '.join(sorted(set(added)))}). The guides are used without a brief or a "
+                            "judge, so such rules do nothing for the writer.\n")
+            history.append({**entry, "score": best_score, "status": "rejected", "best": best})
+            save()
+            print(f"  round {r}: rejected unscored, it wrote rules about the test ({', '.join(sorted(set(added)))})")
+            continue
+
+        cand_texts = place_guides(models, cfg, lad, cand, f"round {r}", tune)
+        # Ratings move as new games refit the ladders, so compare both versions as they stand now.
+        cand_score, best_score = score(cand_texts), score(best_texts)
+        kept = cand_score > best_score
         stale = 0 if kept else stale + 1
         if kept:
-            best, best_score, best_results, last_attempt = cand, score, results, ""
+            best, best_texts, last_attempt = cand, cand_texts, ""
         else:
-            last_attempt = (f"\n## Last experiment (reverted, score {score:.3f})\nHypothesis: {hyp}\n"
-                            f"Judge notes on its drafts:\n{notes(results, 4)}\n")
-        history.append({"round": r, "score": score, "best_score": best_score, "status": "keep" if kept else "discard",
-                        "target": target, "hypothesis": hyp, "guides": cand, "best": best})
+            last_attempt = (f"\n## Last experiment (reverted, Elo {cand_score:.0f})\nHypothesis: {hyp}\n"
+                            f"Judge notes on its drafts:\n{notes(cand_texts, 4)}\n")
+        history.append({**entry, "score": cand_score, "best_score": max(cand_score, best_score),
+                        "status": "keep" if kept else "discard", "best": best})
         save()
-        print(f"  round {r}: {score:.3f} ({'keep' if kept else 'discard'}, {target}), best {best_score:.3f} | {hyp[:90]}")
-    print(f"Best guides: {work / 'best'} (tuning score {best_score:.3f}; the original guides score 0.500)")
+        print(f"  round {r}: Elo {cand_score:.0f} vs best {best_score:.0f} ({'keep' if kept else 'discard'}, "
+              f"{target}) | {hyp[:90]}")
+    final = score(best_texts)
+    save_json(work / "standing.json", {"best_elo": final, "per_piece": standing(lad, best_texts)})
+    print(f"Best guides: {work / 'best'} (Elo {final:.0f} on the tuning pieces; the original guides are 1000)")
 
 
 def cmd_evaluate(a):
@@ -608,16 +994,35 @@ def cmd_evaluate(a):
     if not (work / "best" / "VOICE.md").exists():
         sys.exit("Run `optimize` first.")
     tuned, seed = guides(work / "best"), guides(work / "seed")
-    test = pieces(work, "test")
+    test, lad = pieces(work, "test"), Ladders(work)
     print(f"Held-out test: {len(test)} pieces, writer {cfg['writer']}, judge {cfg['judge']}")
+    orig = pin_seed(models, cfg, lad, seed, test)
+    none = place_guides(models, cfg, lad, None, "no guides", test, versus=lambda p: [orig[p["id"]]])
+    mine = place_guides(models, cfg, lad, tuned, "tuned guides", test,
+                        versus=lambda p: [orig[p["id"]], none[p["id"]]])
     out = {"writer": cfg["writer"], "judge": cfg["judge"], "n": len(test), "date": dt.date.today().isoformat()}
-    for label, opp in [("original guides", seed)] + ([("no guides", None)] if a.vs_none else []):
-        res = score_guides(models, cfg, tuned, opp, test)
-        wins, losses = sum(r["score"] == 1.0 for r in res), sum(r["score"] == 0.0 for r in res)
-        out[label] = {"score": mean(res), "wins": wins, "losses": losses, "splits": len(res) - wins - losses,
-                      "per_piece": res}
-        print(f"  tuned vs {label}: {mean(res):.0%} (won {wins}, lost {losses}, split {len(res) - wins - losses})")
+    for label, opp in (("original guides", orig), ("no guides", none)):
+        per = {p["id"]: lad.head_to_head(p["id"], mine[p["id"]], opp[p["id"]]) for p in test}
+        t = tally([s if s is not None else 0.5 for s in per.values()])
+        out[label] = {**t, "per_piece": per}
+        print(f"  tuned vs {label}: {t['line']}")
+    out["elo"] = {label: mean([lad.rating(pid, t) for pid, t in texts.items()])
+                  for label, texts in (("original guides", orig), ("no guides", none), ("tuned guides", mine))}
+    print("  Elo on held-out pieces: " + ", ".join(f"{k} {v:.0f}" for k, v in out["elo"].items()))
     save_json(work / "eval.json", out)
+
+
+def rule_changes(old, new):
+    """Every line of the writer's guide that is gone from the tuned one, as removed or reworded."""
+    new_lines = [l.strip() for l in new.splitlines() if l.strip()]
+    have = set(new_lines)
+    out = []
+    for l in (x.strip() for x in old.splitlines()):
+        if not l or l in have:
+            continue
+        m = difflib.get_close_matches(l, new_lines, n=1, cutoff=0.6)
+        out.append(("reworded", l, m[0]) if m else ("removed", l, None))
+    return out
 
 
 def cmd_propose(a):
@@ -625,7 +1030,11 @@ def cmd_propose(a):
     cfg = load_cfg(work)
     seed, tuned = guides(work / "seed"), guides(work / "best")
     history = json.loads((work / "history.json").read_text())
-    ev = json.loads((work / "eval.json").read_text()) if (work / "eval.json").exists() else None
+
+    def opt(name):
+        p = work / name
+        return json.loads(p.read_text()) if p.exists() else None
+    base, ev, st = opt("baseline.json"), opt("eval.json"), opt("standing.json")
     prop = work / "proposed"
     prop.mkdir(exist_ok=True)
     (prop / "VOICE.md").write_text(tuned["voice"])
@@ -637,24 +1046,50 @@ def cmd_propose(a):
     (prop / "changes.diff").write_text(diff)
     kept = [h for h in history if h["status"] == "keep"]
     lines = [f"# Tuning report: {cfg['name']}", "",
-             f"- Tuned for: **{cfg['writer']}** (judge {cfg['judge']}, optimizer {cfg['optimizer']})",
-             f"- Rounds: {len(history) - 1}, kept {len(kept)}; tuning score {history[-1]['best_score']:.2f} "
-             "against the original guides (0.50 = no better)"]
-    if ev:
-        o = ev["original guides"]
-        lines.append(f"- Held-out test, {ev['n']} pieces nothing was tuned on: the tuned guides' drafts were closer to "
-                     f"the real piece {o['score']:.0%} of the time (won {o['wins']}, lost {o['losses']}, split {o['splits']})")
-        if "no guides" in ev:
-            lines.append(f"- Against drafts with no guides at all: {ev['no guides']['score']:.0%}")
+             f"Tuned for **{cfg['writer']}** (judge {cfg['judge']}, optimizer {cfg['optimizer']}).", "",
+             "## Do your original guides beat no guides?", ""]
+    if base:
+        lines.append(f"Drafts with your original guides against drafts with no guides, on {base['n']} pieces: "
+                     f"{base['line']}.")
+        if base["closer"] <= base["further"]:
+            lines.append("Your guides did not yet make drafts sound more like you than no guides at all.")
     else:
-        lines.append("- Held-out test: not run yet")
-    lines += ["", "## Changes that were kept", ""]
-    lines += [f"{i}. ({h['target']}, round {h['round']}, {h['score']:.2f}) {h['hypothesis']}"
+        lines.append("Not measured: run `baseline`.")
+    lines += ["", "## Held-out result", ""]
+    if ev:
+        lines += [f"On {ev['n']} pieces nothing was tuned on, the tuned guides' drafts against:",
+                  f"- your original guides: {ev['original guides']['line']}",
+                  f"- no guides: {ev['no guides']['line']}",
+                  "- Elo: " + ", ".join(f"{k} {v:.0f}" for k, v in ev["elo"].items())]
+        if ev["n"] < 10:
+            lines.append(f"\n{ev['n']} pieces is a small test: read these as counts, not as a rate.")
+    else:
+        lines.append("Not run yet: run `evaluate`.")
+    lines += ["", "## Every rule removed or reworded", ""]
+    changes = [(f, c) for k, f in (("voice", "VOICE.md"), ("style", "STYLE.md")) for c in rule_changes(seed[k], tuned[k])]
+    if changes:
+        lines.append("Check each one. Some may be rules you wrote on purpose.")
+        lines.append("")
+        for f, (kind, old, new) in changes:
+            lines.append(f"- **{kind}** in {f}: \"{old}\"" + (f"\n  now: \"{new}\"" if new else ""))
+    else:
+        lines.append("None: every line of your guides is still there.")
+    reasons = [h for h in kept if h.get("removed")]
+    if reasons:
+        lines += ["", "The optimizer's reasons:", ""] + [f"- round {h['round']}: {h['removed']}" for h in reasons]
+    lines += ["", "## Changes that were kept", "",
+              f"{len(history) - 1} rounds, {len(kept)} kept"
+              + (f"; best Elo {st['best_elo']:.0f} on the tuning pieces (your original guides are 1000)" if st else ""),
+              ""]
+    lines += [f"{i}. ({h['target']}, round {h['round']}, Elo {h['score']:.0f}) {h['hypothesis']}"
               for i, h in enumerate(kept, 1)] or ["None: no change beat the original guides."]
+    rejected = sum(h["status"] == "rejected" for h in history)
+    if rejected:
+        lines.append(f"\n{rejected} round(s) were rejected unscored for writing rules about the test itself.")
     lines += ["", "The full proposed files are in this folder; `changes.diff` shows every line that changed.",
               "Nothing in the writing home has changed. Run `adopt` once the writer approves."]
     (prop / "REPORT.md").write_text("\n".join(lines) + "\n")
-    print(f"Proposal: {prop}\n" + "\n".join(lines[2:6]))
+    print(f"Proposal: {prop}\n" + (prop / "REPORT.md").read_text())
 
 
 def cmd_adopt(a):
@@ -680,19 +1115,22 @@ def cmd_status(a):
     work = Path(a.work).expanduser()
     cfg = load_cfg(work)
     m = json.loads((work / "manifest.json").read_text())
-    nb = len(list((work / "briefs").glob("*.json"))) if (work / "briefs").exists() else 0
+    nb = len(list((work / "briefs").glob("*.json"))) - (work / "briefs" / "leaks.json").exists() \
+        if (work / "briefs").exists() else 0
     h = json.loads((work / "history.json").read_text()) if (work / "history.json").exists() else []
+    base = json.loads((work / "baseline.json").read_text()) if (work / "baseline.json").exists() else {}
     ev = json.loads((work / "eval.json").read_text()) if (work / "eval.json").exists() else {}
-    print(f"{cfg['name']} for {cfg['writer']}: {len(m)} pieces, {nb} briefs, "
-          + (f"{len(h) - 1} round{'s' if len(h) != 2 else ''}, tuning best {h[-1]['best_score']:.3f}" if h else "not tuned yet")
-          + (f", held-out vs original {ev['original guides']['score']:.0%}" if ev else ""))
+    print(f"{cfg['name']} for {cfg['writer']}: {len(m)} pieces, {nb} briefs"
+          + (f"; guides vs no guides: {base['line']}" if base else "")
+          + (f"; {len(h) - 1} round{'s' if len(h) != 2 else ''}, {sum(x['status'] == 'keep' for x in h)} kept" if h else "")
+          + (f"; held-out vs original: {ev['original guides']['line']}" if ev else ""))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("prepare", help="copy the guides as the seed and split the writer's pieces")
+    p = sub.add_parser("prepare", help="copy the guides as the seed, split the writer's pieces, check the CLIs")
     p.add_argument("--home", required=True, help="the writing home holding VOICE.md and STYLE.md")
     p.add_argument("--corpus", required=True, help="folder of the writer's own pieces, one .md/.txt file each")
     p.add_argument("--name", required=True, help="the writer's name")
@@ -708,25 +1146,26 @@ def main():
     p.add_argument("--max-words", type=int, default=8000)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--force", action="store_true")
+    p.add_argument("--skip-check", action="store_true", help="skip the sign-in and billing check")
     p.set_defaults(fn=cmd_prepare)
 
-    for name, fn, hlp in (("briefs", cmd_briefs, "extract style-free briefs"),
+    for name, fn, hlp in (("check", cmd_check, "check each CLI is installed, signed in and not billing an API key"),
+                          ("briefs", cmd_briefs, "extract style-free briefs"),
+                          ("baseline", cmd_baseline, "do the original guides beat no guides?"),
+                          ("evaluate", cmd_evaluate, "the tuned guides against the original and no guides, held out"),
                           ("propose", cmd_propose, "write the tuned guides, a diff and a report for review"),
                           ("status", cmd_status, "show progress")):
         p = sub.add_parser(name, help=hlp)
         p.add_argument("--work", required=True)
         p.set_defaults(fn=fn)
 
-    p = sub.add_parser("optimize", help="autoresearch VOICE.md and STYLE.md")
+    p = sub.add_parser("optimize", help="autoresearch VOICE.md and STYLE.md, scored by the Elo ratchet")
     p.add_argument("--work", required=True)
     p.add_argument("--rounds", type=int, default=10)
-    p.add_argument("--patience", type=int, default=4, help="stop after this many rounds without improvement")
+    p.add_argument("--patience", type=int, default=0,
+                   help="stop after this many rounds without improvement (default 0: run every round)")
+    p.add_argument("--skip-check", action="store_true", help="skip the sign-in and billing check")
     p.set_defaults(fn=cmd_optimize)
-
-    p = sub.add_parser("evaluate", help="score the tuned guides on held-out pieces")
-    p.add_argument("--work", required=True)
-    p.add_argument("--vs-none", action="store_true", help="also compare against drafts with no guides")
-    p.set_defaults(fn=cmd_evaluate)
 
     p = sub.add_parser("adopt", help="replace the live guides with the proposal, keeping a backup")
     p.add_argument("--work", required=True)
