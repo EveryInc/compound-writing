@@ -11,7 +11,7 @@ Read `../../references/context-contract.md` first. The voice/style boundary in i
 
 ## Why tune
 
-A guide written from reading someone's work can sound right and still barely change a model's drafts. Tuning measures that directly. For each held-back piece, the model drafts it from a style-free brief, the way a test needs; in real use the guides work without one. A blind judge sees the real piece and two drafts, in both orders, and picks the one closer to how the writer actually wrote it. The judge's notes come back split into voice notes and style notes, so a fix lands in the right file.
+A guide written from reading someone's work can sound right and still barely change a model's drafts. Tuning measures that directly. For each held-back piece, the model drafts it from the notes the writer might have had before writing it (what it says, in order, with its facts and stories), the way they would draft with Compound Writing for real. A blind judge sees the real piece and two drafts, in both orders, and picks the one closer to how the writer actually wrote it. The judge's notes come back split into voice notes and style notes, so a fix lands in the right file.
 
 The score is an Elo ratchet, the metric behind the write-like-Mike experiments (the `ladder` metric in Every Checks). Each piece keeps a ladder of every draft ever written for it. The draft from the writer's original guides is pinned at 1000, the no-guides draft sits on the same ladder, and each new draft plays the piece's best draft first and steps down while it loses. Every rating is refit from all the games, so the bar rises whenever something beats it. Unlike a fixed baseline, it cannot max out, so there is no "perfect" round and no early stop. An autoresearch loop proposes one change per round to `VOICE.md`, `STYLE.md` or both, and keeps it only if its drafts rate higher than the current best's, both read from the ladders as they stand now.
 
@@ -32,11 +32,11 @@ Tell the writer what it costs before starting: everything runs on their own subs
 
 ## Run
 
-The script is `scripts/tune.py` in this skill's folder. Each run lives in a visible folder inside the writing home, `tuning/<model>/` by default, holding the seed copy of the guides, the pieces and briefs, every round, the cache and the report. Run the long steps (`briefs`, `optimize`, `evaluate`) in the background and report as rounds finish.
+The script is `scripts/tune.py` in this skill's folder. Each run lives in a visible folder inside the writing home, `tuning/<model>/` by default, holding the seed copy of the guides, the pieces and their notes, every round, the cache and the report. Run the long steps (`notes`, `optimize`, `evaluate`) in the background and report as rounds finish.
 
 ```bash
 python3 scripts/tune.py prepare --home <writing-home> --corpus <pieces> --name "<writer>" --writer claude:claude-opus-5-5
-python3 scripts/tune.py briefs   --work <writing-home>/tuning/claude-claude-opus-5-5
+python3 scripts/tune.py notes    --work <writing-home>/tuning/claude-claude-opus-5-5
 python3 scripts/tune.py baseline --work <writing-home>/tuning/claude-claude-opus-5-5
 python3 scripts/tune.py optimize --work <writing-home>/tuning/claude-claude-opus-5-5
 python3 scripts/tune.py evaluate --work <writing-home>/tuning/claude-claude-opus-5-5
@@ -45,9 +45,9 @@ python3 scripts/tune.py propose  --work <writing-home>/tuning/claude-claude-opus
 
 Check the work between steps:
 
-- **After `briefs`:** the step re-extracts any brief that shares a run of six or more words with its piece, and lists the ones that still do in `briefs/leaks.json`. Names and titles are fine; anything else, especially opening and closing lines, is the writer's phrasing leaking into the drafts and makes the test too easy. Open those briefs and two or three others.
+- **After `notes`:** open two or three files in `notes/`. They should read like a writer's plan for the piece. Some of the writer's own phrases are fine; a writer's real notes have them too.
 - **After `baseline`:** tell the writer first whether their original guides beat no guides, as counts ("closer on 5 of 7"). If they don't, say so plainly: that is the most useful finding of the run, and tuning starts from there.
-- **During `optimize`:** each round prints its Elo, the current best's Elo, which file it changed and its hypothesis. The original guides are 1000. The best's rating drifts as new games refit the ladders; that is the ratchet working. A round that writes rules about the test itself (the brief, the judge, the reference piece) is rejected unscored, since the guides are used without any of them.
+- **During `optimize`:** each round prints its Elo, the current best's Elo, which file it changed and its hypothesis. The original guides are 1000. The best's rating drifts as new games refit the ladders; that is the ratchet working.
 - **After `evaluate`:** this is the result to trust, measured on pieces nothing was tuned on, head to head against both the original guides and no guides. With fewer than 10 held-out pieces it reports counts only; never turn 3 of 4 into "75%". A clear win is closer on most pieces against both. Mostly splits or losses means the changes did not generalise: say so plainly and suggest more pieces or rounds rather than adopting.
 
 ## Review and adopt
@@ -57,7 +57,7 @@ Check the work between steps:
 Before asking for approval, read the diff yourself and check that:
 
 - every removed or reworded rule in the report is one the writer would let go. Writers keep some rules on purpose ("Many paragraphs have none"); put those back unless the writer agrees;
-- no rule mentions the brief, the judge or anything else that exists only in the test;
+- no rule mentions the judge or anything else about the scoring;
 - every changed rule sits on the right side of the voice/style boundary; move or split any that don't;
 - no rule is a phrase bank of the writer's sentences, and nothing invents experiences or facts;
 - the files keep the writer's own structure and headings.

@@ -6,8 +6,8 @@ The writer's existing guides are the baseline. Each step:
   prepare   copy the guides as the seed, load the writer's pieces, split them learn / tune / test,
             then run `check`
   check     confirm each CLI is installed, signed in and on the writer's subscription, not an API key
-  briefs    extract a style-free brief from every piece: the substance, none of the style, and
-            re-extract any brief that copies runs of the writer's wording
+  notes     write the notes the writer might have had before each piece: what it says, in order,
+            with its facts and stories. Drafts are written from these, as the writer would in real use
   baseline  do the writer's guides beat no guides at all? Answered before any tuning
   optimize  autoresearch scored by an Elo ratchet: propose one change to VOICE.md and/or STYLE.md,
             draft the tuning pieces with it, and play each draft against that piece's ladder of
@@ -52,37 +52,27 @@ from pathlib import Path
 
 # ---------------------------------------------------------------- prompts
 
-BRIEF_SPEC = """# Brief extraction spec
+NOTES_SPEC = """# Writer's notes
 
-A brief is everything a competent writer would need to reconstruct the substance of a piece, with
-none of its style. It must carry every idea, fact, example and structural beat, and nothing about
-how the author phrases or frames them.
+Write the notes the author might have had before writing this piece: what they wanted to say, in
+order, with the facts, examples and stories they planned to use. A writer's notes are terse and
+unpolished, and they can keep a phrase or line the author already had in mind, but they are not the
+piece. Do not describe its tone or style.
 
 Write one JSON object, exactly these keys:
 
 {
-  "topic": "One neutral sentence: what the piece is about.",
+  "topic": "What the piece is about, in a sentence.",
   "audience": "Who the piece is for, in a few words.",
-  "thesis": "The core claim or takeaway, stated flatly in one or two sentences.",
-  "outline": ["Ordered beats of the piece, one string per section or major move, each listing the substantive points made in it as terse neutral notes."],
-  "facts": ["Every specific fact, number, study, product, tool, company, person or source the piece cites, with enough detail to reuse it accurately."],
-  "author_experiences": ["First-person facts the author draws on (jobs, projects, anecdotes, results), stated as plain facts."],
+  "thesis": "The main point, in one or two sentences.",
+  "outline": ["The beats of the piece in order, one string per section or major move, as terse notes."],
+  "facts": ["Every specific fact, number, study, product, tool, company, person or source the piece uses."],
+  "author_experiences": ["Things from the author's own life or work the piece draws on, stated plainly."],
   "artifacts": ["Any prompts, code, tables, templates, charts or images the piece includes, described by what they contain."],
   "format": {"approx_words": 0, "uses_headings": true, "uses_lists": false, "includes_code_or_prompts": false}
 }
 
-Rules:
-1. Substance, completely. Someone holding only the brief should be able to make every point the
-   piece makes, in the same order, with the same evidence.
-2. No style. No verbatim run longer than five words, except proper names, titles, numbers and
-   technical terms. Paraphrase every sentence you summarise, the opening and closing lines
-   included. Do not describe tone, voice, humor or rhythm.
-3. No rhetorical devices. Leave out the hook, jokes, asides, metaphors, coined phrases, rhetorical
-   questions and the closing flourish. If an anecdote or analogy is part of the argument, keep it
-   as a neutral fact.
-4. Neutral register: flat, telegraphic notes.
-5. No title.
-6. Ignore boilerplate (newsletter plugs, calls to action, captions) unless the piece is about it."""
+Leave out the title and boilerplate (newsletter plugs, calls to action, captions)."""
 
 DRAFT_SYSTEM = """You are drafting with Compound Writing. Two guides govern this writer's work.
 VOICE.md is the authority for how the sentences sound: syntax, diction and tone. STYLE.md is the
@@ -96,11 +86,11 @@ authority for what the piece must do: argument, evidence, structure and standard
 {style}
 </STYLE.md>"""
 
-WRITE_INSTRUCTION = ("Write the complete piece described in the brief below. "
+WRITE_INSTRUCTION = ("Write the complete piece from the writer's notes below. "
                      "Output only the body in Markdown, with no title and no commentary.\n\n")
 
 JUDGE_CRITERIA = """Decide which draft is closer to the reference piece, meaning it reads more like the
-same author wrote it. Both drafts were written from the same content brief, so do not reward a
+same author wrote it. Both drafts were written from the same notes, so do not reward a
 draft for covering more facts. Compare authorship: voice and tone, how the piece opens and closes,
 structure and pacing, paragraph and sentence habits, word choice, formatting, how evidence, sources
 and personal experience are introduced, and how much the draft sounds like generic AI prose versus
@@ -137,12 +127,11 @@ experiment per turn: form a hypothesis about what would make drafts read more li
 writing, edit VOICE.md and/or STYLE.md to test it, and the harness evaluates it. If the score
 beats the current best it is kept; otherwise it is reverted.
 
-How the guides are used for real: {name} drafts with {writer} from their own notes, outlines,
-conversations or a rough draft, with no brief. The brief in this test is only scaffolding that
-supplies the substance of a past piece so drafts can be compared with it. So the guides must stand
-alone: they supply everything about how {name} writes, and they never mention a brief, a judge, a
-reference piece, drafts A and B, or anything else about this test. A rule that only makes sense
-inside the test is a failed experiment.
+How the guides are used: {name} gives {writer} both files as its instructions, along with their
+notes for a piece (what it says, in order, with its facts and stories), and it writes the piece.
+The test works the same way, with notes for pieces {name} has already published. The guides must
+supply everything about how {name} writes that the notes don't. Never mention the judge, the
+reference piece or anything else about the scoring in the guides.
 
 Keep the boundary between the files. It is how the writer maintains them:
 - VOICE.md: how sentences sound. Syntax, diction and tone: cadence, rhythm, register,
@@ -200,10 +189,6 @@ the complete VOICE.md, or UNCHANGED
 <style_md>
 the complete STYLE.md, or UNCHANGED
 </style_md>"""
-
-# Words that only make sense inside the test. A candidate that adds them is rejected unscored.
-TEST_ONLY = re.compile(r"\b(?:the|a|each|this|every|your) brief\b|\bbriefs\b|\bjudge[sd]?\b|"
-                       r"\breference piece\b|\bdraft [AB]\b", re.I)
 
 # ---------------------------------------------------------------- model calls
 
@@ -339,7 +324,7 @@ def workers_for(cfg, *specs):
 def preflight(cfg, models):
     """Before a long run: every CLI installed, signed in, and billing the writer's subscription."""
     problems = []
-    specs = sorted({cfg[k] for k in ("writer", "judge", "optimizer", "brief_model")})
+    specs = sorted({cfg[k] for k in ("writer", "judge", "optimizer", "notes_model")})
     for spec in specs:
         backend, _, model = spec.partition(":")
         exe = {"claude": "claude", "codex": "codex", "agy": "agy"}.get(backend)
@@ -413,20 +398,20 @@ def pieces(work, split=None):
     for row in json.loads((work / "manifest.json").read_text()):
         if split and row["split"] not in split.split("+"):
             continue
-        bp = work / "briefs" / f"{row['id']}.json"
+        np_ = work / "notes" / f"{row['id']}.json"
         out.append({**row, "gold": (work / "pieces" / f"{row['id']}.md").read_text(),
-                    "brief": json.loads(bp.read_text()) if bp.exists() else None})
-    return [p for p in out if p["brief"]] if split else out
+                    "notes": json.loads(np_.read_text()) if np_.exists() else None})
+    return [p for p in out if p["notes"]] if split else out
 
 
-def render_brief(p):
-    b, fmt = p["brief"], p["brief"].get("format", {})
+def render_notes(p):
+    b, fmt = p["notes"], p["notes"].get("format", {})
 
     def bullets(items):
         return "\n".join(f"- {x}" for x in items) if items else "- (none)"
 
     head = "".join(f"**{k}:** {p[k.lower()]}\n" for k in ("Publication", "Date") if p.get(k.lower()))
-    return f"""# Brief
+    return f"""# Notes
 
 {head}**Target length:** about {fmt.get('approx_words', p['words'])} words
 **Format:** {'uses section headings' if fmt.get('uses_headings') else 'no section headings'}; {'uses lists' if fmt.get('uses_lists') else 'mostly prose'}; {'includes code or prompts' if fmt.get('includes_code_or_prompts') else 'no code'}
@@ -450,45 +435,7 @@ def render_brief(p):
 
 
 def draft(models, g, p, writer):
-    return models.chat(writer, WRITE_INSTRUCTION + render_brief(p), system=system_for(g) if g else "")
-
-
-# ---------------------------------------------------------------- brief leak check
-
-def _words(text):
-    return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", text.lower())
-
-
-def _strings(obj):
-    if isinstance(obj, str):
-        yield obj
-    elif isinstance(obj, dict):
-        for v in obj.values():
-            yield from _strings(v)
-    elif isinstance(obj, list):
-        for v in obj:
-            yield from _strings(v)
-
-
-def leaks(brief, gold, n=6):
-    """Runs of n+ words the brief shares with the piece, merged into phrases. Rule 2 of the spec
-    allows names and titles, so a few hits can be fine; most are the writer's phrasing leaking in."""
-    gw = _words(gold)
-    grams = {tuple(gw[i:i + n]) for i in range(len(gw) - n + 1)}
-    found = []
-    for s in _strings(brief):
-        w = _words(s)
-        i = 0
-        while i <= len(w) - n:
-            if tuple(w[i:i + n]) in grams:
-                j = i + n
-                while j < len(w) and tuple(w[j - n + 1:j + 1]) in grams:
-                    j += 1
-                found.append(" ".join(w[i:j]))
-                i = j
-            else:
-                i += 1
-    return found
+    return models.chat(writer, WRITE_INSTRUCTION + render_notes(p), system=system_for(g) if g else "")
 
 
 # ---------------------------------------------------------------- judge
@@ -790,7 +737,7 @@ def cmd_prepare(a):
                          "date": c["meta"].get("date", "")})
     save_json(work / "manifest.json", manifest)
     cfg = {"home": str(home), "name": a.name, "writer": a.writer, "judge": a.judge, "optimizer": a.optimizer,
-           "brief_model": a.brief_model, "workers": a.workers, "created": dt.date.today().isoformat()}
+           "notes_model": a.notes_model, "workers": a.workers, "created": dt.date.today().isoformat()}
     save_json(work / "config.json", cfg)
     print(f"Split: {n - test - tune} learn / {tune} tune / {test} test.\nRun folder: {work}")
     if test < 10:
@@ -804,49 +751,26 @@ def cmd_check(a):
     run_check(load_cfg(work), Models(work))
 
 
-def cmd_briefs(a):
+def cmd_notes(a):
     work = Path(a.work).expanduser()
     cfg, models = load_cfg(work), Models(work)
-    todo = [p for p in pieces(work) if not p["brief"]]
-    print(f"Extracting {len(todo)} briefs with {cfg['brief_model']}...")
-    leak_path = work / "briefs" / "leaks.json"
+    todo = [p for p in pieces(work) if not p["notes"]]
+    print(f"Writing notes for {len(todo)} pieces with {cfg['notes_model']}...")
 
     def one(p):
-        base = (f"{BRIEF_SPEC}\n\nApproximate word count: {p['words']}\n\n<piece>\n{p['gold']}\n</piece>\n\n"
-                "Return only the JSON object.")
-        best, prompt = None, base
-        for attempt in range(4):
-            m = re.search(r"\{.*\}", models.chat(cfg["brief_model"], prompt, sample=attempt), re.S)
+        prompt = (f"{NOTES_SPEC}\n\nApproximate word count: {p['words']}\n\n<piece>\n{p['gold']}\n</piece>\n\n"
+                  "Return only the JSON object.")
+        for attempt in range(3):
+            m = re.search(r"\{.*\}", models.chat(cfg["notes_model"], prompt, sample=attempt), re.S)
             try:
-                brief = json.loads(m.group(0))
+                save_json(work / "notes" / f"{p['id']}.json", json.loads(m.group(0)))
+                return
             except (AttributeError, json.JSONDecodeError):
                 continue
-            found = leaks(brief, p["gold"])
-            if best is None or len(found) < len(best[1]):
-                best = (brief, found)
-            if not found:
-                break
-            # Re-extract with the copied runs named, so the brief carries the substance and not the wording.
-            prompt = base + ("\n\nYour last attempt copied these runs of the author's own wording. Restate each "
-                             "in neutral words of your own (names and titles may stay):\n"
-                             + "\n".join(f"- {x}" for x in found[:20]))
-        if best is None:
-            print(f"  could not extract a brief for {p['id']}; it will be skipped")
-            return p["id"], None
-        save_json(work / "briefs" / f"{p['id']}.json", best[0])
-        return p["id"], best[1]
+        print(f"  could not write notes for {p['id']}; it will be skipped")
 
-    results = pmap(one, todo, workers_for(cfg, cfg["brief_model"]))
-    record = json.loads(leak_path.read_text()) if leak_path.exists() else {}
-    record.update({pid: found for pid, found in results if found is not None})
-    save_json(leak_path, record)
-    print(f"Briefs ready: {sum(1 for p in pieces(work) if p['brief'])} of {len(pieces(work))}.")
-    leaky = {pid: f for pid, f in record.items() if f}
-    if leaky:
-        print(f"{len(leaky)} brief(s) still share runs of 6+ words with their piece. Names and titles are fine; "
-              f"anything else is the writer's phrasing and makes the test too easy. See {leak_path}:")
-        for pid, f in sorted(leaky.items()):
-            print(f"  {pid}: " + " | ".join(f[:3]) + (" ..." if len(f) > 3 else ""))
+    pmap(one, todo, workers_for(cfg, cfg["notes_model"]))
+    print(f"Notes ready: {sum(1 for p in pieces(work) if p['notes'])} of {len(pieces(work))}.")
 
 
 def cmd_baseline(a):
@@ -855,7 +779,7 @@ def cmd_baseline(a):
     cfg, models = load_cfg(work), Models(work)
     items = pieces(work, "tune+test")
     if not items:
-        sys.exit("No pieces with briefs: run `briefs` first.")
+        sys.exit("No pieces with notes: run `notes` first.")
     seed, lad = guides(work / "seed"), Ladders(work)
     print(f"Do the guides beat no guides? {len(items)} pieces, writer {cfg['writer']}, judge {cfg['judge']}")
     orig = pin_seed(models, cfg, lad, seed, items)
@@ -881,7 +805,7 @@ def cmd_optimize(a):
     seed = guides(work / "seed")
     tune, study_pool = pieces(work, "tune"), pieces(work, "learn")
     if not tune:
-        sys.exit("No tuning pieces with briefs: run `briefs` first.")
+        sys.exit("No tuning pieces with notes: run `notes` first.")
     lad = Ladders(work)
     hist_path = work / "history.json"
     history = json.loads(hist_path.read_text()) if hist_path.exists() else []
@@ -937,7 +861,7 @@ def cmd_optimize(a):
         prompt = PROGRAM.format(name=cfg["name"], writer=cfg["writer"]) + "\n\n" + TURN.format(
             log=log(), best_score=best_score, voice=best["voice"], style=best["style"],
             notes=notes(best_texts), last_attempt=last_attempt,
-            study="\n\n".join(f"<brief>\n{render_brief(p)}\n</brief>\n<real_piece>\n{p['gold']}\n</real_piece>"
+            study="\n\n".join(f"<notes>\n{render_notes(p)}\n</notes>\n<real_piece>\n{p['gold']}\n</real_piece>"
                               for p in study))
         reply = models.chat(cfg["optimizer"], prompt, sample=r)
         v = re.search(r"<voice_md>\s*(.*?)\s*</voice_md>", reply, re.S)
@@ -956,18 +880,6 @@ def cmd_optimize(a):
         removed = m_rem.group(1).strip() if m_rem and m_rem.group(1).strip().lower() != "none" else ""
         target = "+".join(k for k in ("voice", "style") if cand[k] != best[k])
         entry = {"round": r, "target": target, "hypothesis": hyp, "removed": removed, "guides": cand}
-
-        added = [m.group(0) for m in TEST_ONLY.finditer(cand["voice"] + cand["style"])]
-        if len(added) > len(TEST_ONLY.findall(best["voice"] + best["style"])):
-            stale += 1
-            last_attempt = (f"\n## Last experiment (rejected unscored)\nHypothesis: {hyp}\nIt wrote rules about the "
-                            f"test itself ({', '.join(sorted(set(added)))}). The guides are used without a brief or a "
-                            "judge, so such rules do nothing for the writer.\n")
-            history.append({**entry, "score": best_score, "status": "rejected", "best": best})
-            save()
-            print(f"  round {r}: rejected unscored, it wrote rules about the test ({', '.join(sorted(set(added)))})")
-            continue
-
         cand_texts = place_guides(models, cfg, lad, cand, f"round {r}", tune)
         # Ratings move as new games refit the ladders, so compare both versions as they stand now.
         cand_score, best_score = score(cand_texts), score(best_texts)
@@ -1083,9 +995,6 @@ def cmd_propose(a):
               ""]
     lines += [f"{i}. ({h['target']}, round {h['round']}, Elo {h['score']:.0f}) {h['hypothesis']}"
               for i, h in enumerate(kept, 1)] or ["None: no change beat the original guides."]
-    rejected = sum(h["status"] == "rejected" for h in history)
-    if rejected:
-        lines.append(f"\n{rejected} round(s) were rejected unscored for writing rules about the test itself.")
     lines += ["", "The full proposed files are in this folder; `changes.diff` shows every line that changed.",
               "Nothing in the writing home has changed. Run `adopt` once the writer approves."]
     (prop / "REPORT.md").write_text("\n".join(lines) + "\n")
@@ -1115,12 +1024,11 @@ def cmd_status(a):
     work = Path(a.work).expanduser()
     cfg = load_cfg(work)
     m = json.loads((work / "manifest.json").read_text())
-    nb = len(list((work / "briefs").glob("*.json"))) - (work / "briefs" / "leaks.json").exists() \
-        if (work / "briefs").exists() else 0
+    nb = len(list((work / "notes").glob("*.json"))) if (work / "notes").exists() else 0
     h = json.loads((work / "history.json").read_text()) if (work / "history.json").exists() else []
     base = json.loads((work / "baseline.json").read_text()) if (work / "baseline.json").exists() else {}
     ev = json.loads((work / "eval.json").read_text()) if (work / "eval.json").exists() else {}
-    print(f"{cfg['name']} for {cfg['writer']}: {len(m)} pieces, {nb} briefs"
+    print(f"{cfg['name']} for {cfg['writer']}: {len(m)} pieces, {nb} notes"
           + (f"; guides vs no guides: {base['line']}" if base else "")
           + (f"; {len(h) - 1} round{'s' if len(h) != 2 else ''}, {sum(x['status'] == 'keep' for x in h)} kept" if h else "")
           + (f"; held-out vs original: {ev['original guides']['line']}" if ev else ""))
@@ -1138,7 +1046,7 @@ def main():
     p.add_argument("--work", help="run folder (default: <home>/tuning/<writer>)")
     p.add_argument("--judge", default="claude:claude-opus-5-5")
     p.add_argument("--optimizer", default="claude:claude-opus-5-5", help="proposes the edits")
-    p.add_argument("--brief-model", default="claude:claude-sonnet-5-5")
+    p.add_argument("--notes-model", default="claude:claude-sonnet-5-5", help="writes the notes for each piece")
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--test", type=int)
     p.add_argument("--tune", type=int)
@@ -1150,7 +1058,7 @@ def main():
     p.set_defaults(fn=cmd_prepare)
 
     for name, fn, hlp in (("check", cmd_check, "check each CLI is installed, signed in and not billing an API key"),
-                          ("briefs", cmd_briefs, "extract style-free briefs"),
+                          ("notes", cmd_notes, "write the writer's notes for each piece"),
                           ("baseline", cmd_baseline, "do the original guides beat no guides?"),
                           ("evaluate", cmd_evaluate, "the tuned guides against the original and no guides, held out"),
                           ("propose", cmd_propose, "write the tuned guides, a diff and a report for review"),
