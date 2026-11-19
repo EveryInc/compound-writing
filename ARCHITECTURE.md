@@ -94,6 +94,8 @@ Compound learning means updating a maintained context surface, not claiming priv
 
 `cw-save` proposes the right destination and follows its write-safety rules. It does not silently append lessons to plugin files.
 
+`cw-tune` is an optional, evidence-based way to improve `VOICE.md` after onboarding. It treats the writer's own `VOICE.md` as the baseline and measures drafts against the writer's real pieces a section at a time, with a blind judge that compares voice only. `STYLE.md` is loaded when drafting but never edited, since it covers whole-piece concerns and is often a shared standard. Each run lives in a visible `tuning/<model>/` folder in the writing home, and the live `VOICE.md` changes only when the writer approves the proposal, with the previous version kept as a backup.
+
 ## Packaging Contract
 
 - `skills/` is canonical across Claude, Codex, and Antigravity.
