@@ -11,7 +11,7 @@ Compound Writing is a context-first writing system. At a first meaningful intera
 5. **Provenance in the workflow** — Keep claims attached to sources and mark unsupported or model-added material explicitly.
 6. **Durable artifacts** — Give a new writer one understandable writing home, and otherwise put notes, outlines, drafts, reviews, and research where the active workspace expects them. Do not create a second workspace by default.
 7. **Progressive disclosure** — Load only the skill and references needed for the current task.
-8. **One source, two packages** — `skills/` is the cross-runtime behavior layer. Claude and Codex packaging may expose it differently, but should not fork the editorial logic.
+8. **One source, multiple hosts** — `skills/` is the cross-runtime behavior layer. Claude, Codex, and Antigravity packaging may expose it differently, but should not fork the editorial logic.
 9. **Full toolbox, light front door** — Ship every generic tool in the public package while letting `cw-scribe` protect first-time users from choosing among them prematurely.
 
 ## Writing Home Contract
@@ -96,8 +96,9 @@ Compound learning means updating a maintained context surface, not claiming priv
 
 ## Packaging Contract
 
-- `skills/` is canonical across Claude and Codex.
+- `skills/` is canonical across Claude, Codex, and Antigravity.
 - `.codex-plugin/plugin.json` packages the shared skills for Codex.
+- `.antigravity-plugin/plugin.json` packages the repository root for Antigravity, which discovers `skills/` directly. Keep shared references, defaults, and skill scripts in their original relative locations; do not install skill folders individually. Antigravity uses the portable reviewer skills; the nested Claude subagent adapters remain Claude-specific.
 - `.claude-plugin/` and `agents/` provide Claude compatibility and optional subagent execution.
 - `commands/` is a compatibility/help surface, not a second implementation of the skills.
 - Public releases are assembled from an explicit allowlist containing the full generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are excluded from the published package.
@@ -110,7 +111,7 @@ Compound learning means updating a maintained context surface, not claiming priv
 
 An architecture change is ready when:
 
-1. Both plugin manifests describe the same product and public version.
+1. All host plugin manifests describe the same product and public version.
 2. Every skill passes the Codex skill validator.
 3. The Codex plugin passes plugin validation.
 4. Skill descriptions state clear triggers and boundaries.

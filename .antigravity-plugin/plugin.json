@@ -1,0 +1,21 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "compound-writing",
+  "displayName": "Compound Writing",
+  "version": "2.4.1",
+  "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
+  "author": {
+    "name": "Every",
+    "url": "https://every.to"
+  },
+  "homepage": "https://github.com/EveryInc/compound-writing",
+  "repository": "https://github.com/EveryInc/compound-writing",
+  "license": "MIT",
+  "logo": "assets/compound-writing.png",
+  "keywords": ["writing", "editing", "compound-writing", "voice", "style-guide", "audience"],
+  "suggestedPrompts": [
+    "Use cw-scribe to help me develop this idea into a strong piece.",
+    "Help me set up an audience guide for my writing.",
+    "Review this draft for my intended readers."
+  ]
+}

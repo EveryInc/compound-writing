@@ -2,7 +2,7 @@
 
 A context-first writing toolbox for developing ideas, drafting, revising, stress-testing, and preparing work for publication without sanding off the writer.
 
-Compound Writing is packaged for both Claude and Codex from one canonical source tree. The full toolbox is available from the start, but users do not need to learn every tool: `cw-scribe` loads the governing context, helps a first-time writer establish one durable writing home when needed, and chooses the smallest useful workflow. Specialist skills remain available when the user wants a precise instrument.
+Compound Writing is packaged for Claude, Codex, and Google Antigravity from one canonical source tree. The full toolbox is available from the start, but users do not need to learn every tool: `cw-scribe` loads the governing context, helps a first-time writer establish one durable writing home when needed, and chooses the smallest useful workflow. Specialist skills remain available when the user wants a precise instrument.
 
 ## Start With Scribe
 
@@ -20,7 +20,7 @@ The system:
 - routes from the user's outcome instead of forcing a seven-stage pipeline;
 - treats source provenance as part of writing rather than cleanup at the end;
 - saves durable learning into maintained context, style guides, checklists, or workflows;
-- keeps shared skill frontmatter valid across Claude and Codex.
+- keeps shared skill frontmatter valid across Claude, Codex, and Antigravity.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full contract.
 
@@ -152,6 +152,7 @@ Compound Writing loads context in this order:
 
 ```text
 compound-writing/
+├── .antigravity-plugin/ # Antigravity manifest (shared skills)
 ├── .claude-plugin/      # Claude manifest and marketplace metadata
 ├── .codex-plugin/       # Codex manifest
 ├── agents/              # Claude subagent adapters for panels and specialist work
@@ -186,9 +187,24 @@ To update later, run `/plugin update compound-writing@compound-writing`.
 
 The repository root is the installable plugin. Clone it locally, then point your Codex marketplace configuration at that folder; [codex-marketplace.example.json](codex-marketplace.example.json) shows the expected entry.
 
+### Google Antigravity
+
+Install the whole checkout with the Antigravity CLI (`agy`):
+
+```bash
+git clone https://github.com/EveryInc/compound-writing.git
+agy plugin validate ./compound-writing
+agy plugin install ./compound-writing
+agy plugin list --json
+```
+
+Start a new conversation in your writing workspace and select `cw-scribe` from the slash picker (it may appear as `compound-writing:cw-scribe`), or ask to use `cw-scribe`. The native plugin loads the same `skills/` used by Claude and Codex, including their references and setup templates. Python 3 is needed when creating a writing home.
+
+The validator's warning about `commands/` is expected: that directory contains Claude compatibility commands. Antigravity uses the canonical skills; start with `/cw-scribe` instead of `/cw-help`. See the [Antigravity guide](docs/antigravity.md) for workspace-only installation, updating, and verification.
+
 ### From a local checkout
 
-Clone the repository, then add the checkout folder as a local-directory marketplace for your runtime. For Claude, `claude plugin marketplace add /path/to/compound-writing` followed by `claude plugin install compound-writing@compound-writing`.
+Clone the repository, then follow the installation instructions for your runtime above. For Claude, `claude plugin marketplace add /path/to/compound-writing` followed by `claude plugin install compound-writing@compound-writing`. For Antigravity, use `agy plugin install /path/to/compound-writing`.
 
 The public repository contains only the generic toolbox. Publication-, company-, writer-, column-, and platform-specific extensions are maintained separately.
 
