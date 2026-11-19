@@ -7,7 +7,7 @@ Use this contract whenever a Compound Writing skill needs voice, audience, proje
 Load only the layers that exist and matter to the task, in this order:
 
 1. Explicit user instructions and supplied material.
-2. Repository or workspace instructions such as `AGENTS.md`, `CLAUDE.md`, or `CODEX.md`.
+2. Repository or workspace instructions such as `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, or `GEMINI.md`, plus applicable rules supplied by the active host. Respect each rule's scope and activation conditions.
 3. Global identity, preference, rule, and voice files named by those instructions.
 4. The active writing home's or project's `AGENTS.md`, `VOICE.md`, `STYLE.md`, optional `AUDIENCE.md` (including a shared audience guide named by its instructions), brief, template, workflow, or checklist.
 5. Relevant curated examples from the active writing home's or project's `examples/` folder.
