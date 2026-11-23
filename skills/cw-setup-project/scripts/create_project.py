@@ -10,7 +10,7 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create VOICE.md, STYLE.md, examples/, and drafts/ for one writing home."
+        description="Create examples/ (gold examples), VOICE.md (lessons), STYLE.md, and drafts/ for one writing home."
     )
     parser.add_argument("target", type=Path, help="Writing-home folder to create or initialize")
     parser.add_argument(

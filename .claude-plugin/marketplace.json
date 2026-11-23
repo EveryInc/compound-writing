@@ -1,18 +1,18 @@
 {
-  "name": "compound-writing",
+  "name": "compound-writing-gold-local",
   "owner": {
     "name": "Every",
     "url": "https://github.com/EveryInc"
   },
   "metadata": {
-    "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
-    "version": "2.4.1"
+    "description": "Local experiment marketplace for the gold-examples edition of Compound Writing.",
+    "version": "2.4.1-gold.1"
   },
   "plugins": [
     {
-      "name": "compound-writing",
-      "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
-      "version": "2.4.1",
+      "name": "compound-writing-gold",
+      "description": "EXPERIMENT: Compound Writing with voice read from the writer's gold examples instead of a written voice description.",
+      "version": "2.4.1-gold.1",
       "author": {
         "name": "Every",
         "email": "katie@every.to"

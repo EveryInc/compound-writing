@@ -1,6 +1,6 @@
 # Compound Writing Fallback Defaults
 
-Use these only when the writer's maintained voice, project style, assignment, and publication context leave a real gap. They are craft fallbacks, not a substitute identity.
+Use these only when the writer's gold examples, voice lessons, project style, assignment, and publication context leave a real gap. Where the gold examples consistently do otherwise, the examples win. They are craft fallbacks, not a substitute identity.
 
 ## Core
 

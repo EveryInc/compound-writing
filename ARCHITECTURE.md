@@ -1,4 +1,6 @@
-# Compound Writing Architecture
+# Compound Writing Architecture (gold-examples edition)
+
+> **Experimental edition: voice from gold examples.** This fork of Compound Writing 2.4.1 replaces the written voice description in `VOICE.md` with a procedure: before drafting or editing, read the writer's gold examples and extract sentence- and word-level patterns from them (`references/voice-from-examples.md`). `VOICE.md` keeps only confirmed lessons. See `EXPERIMENT.md`. Not for release.
 
 Compound Writing is a context-first writing system. At a first meaningful interaction with no established writing context, it helps the writer create one portable writing home. It does not seize an existing workspace, invent a parallel memory system, or force every piece through one pipeline. It loads the context that governs the work, routes to the smallest useful workflow, and leaves durable artifacts in the authoritative location.
 
@@ -28,10 +30,10 @@ writing-home/
 └── drafts/
 ```
 
-- `VOICE.md` governs how sentences sound: syntax, diction, and tone, including cadence, register, punctuation, and verbal tics.
+- `examples/` holds the writer's gold pieces. They govern how sentences sound: voice-sensitive skills read them and extract syntax, diction, and tone patterns (`references/voice-from-examples.md`) instead of reading a description.
+- `VOICE.md` holds dated, confirmed lessons on syntax, diction, and tone that the examples did not teach. It never describes the voice in general.
 - `STYLE.md` governs what an article must do, contain, and prove: argument, evidence, article structure, substantive standards, and publication readiness.
 - Optional `AUDIENCE.md` governs reader situations, knowledge, wants, interests, resistance, and the evidence behind those observations. It may be one shared guide named by several projects.
-- `examples/` holds curated positive and negative examples that clarify the written rules without replacing them.
 - `drafts/` holds one folder per piece, with that piece's notes, research, outline, versions, and reviews together.
 
 The target must be explicit or safely resolved before setup writes anything. Existing workspaces retain their own structure and authority; a live draft, useful context, or an active workspace takes precedence over onboarding. Missing scaffold files alone do not prove that setup is needed. A legacy `TASTE.md` may be migrated into the two guides, but it is not created for a new writing home and is never silently deleted.
@@ -55,7 +57,7 @@ The context contract lives in `references/context-contract.md`. It defines the a
 - **Orient** — when no writing context or useful artifact exists, explain one writing home, resolve its location, run `cw-setup-project`, and begin `cw-onboarding`
 - **Explore** — `cw-brainstorm`, `cw-interview`
 - **Shape** — `cw-thesis`, `cw-promise`, `cw-outline`
-- **Draft** — `cw-draft` using the active `VOICE.md`, `STYLE.md`, brief, and sources
+- **Draft** — `cw-draft` using a voice read from the gold examples, `VOICE.md` lessons, `STYLE.md`, brief, and sources
 - **Revise** — `cw-bluf` for importance and lede placement; `cw-dev-edit` for the broader structure; then `cw-line-edit` when structure is stable
 - **Validate** — `cw-ai-check`, `cw-voice-check`, `cw-final-pass`
 - **Stress-test** — `cw-reader`, `cw-objections`, `cw-nemesis`, `cw-panel`, `cw-debate`, or a named lens
@@ -85,7 +87,7 @@ The public package contains the full generic toolbox. Progressive disclosure com
 Compound learning means updating a maintained context surface, not claiming private memory.
 
 - Cross-project voice preferences belong in the user's global voice guide.
-- Project syntax, diction, and tone preferences belong in `VOICE.md`; project argument, evidence, article-structure, and publication-readiness standards belong in `STYLE.md`.
+- Project syntax, diction, and tone corrections belong in `VOICE.md` as lessons, or in `examples/` as a piece that shows them; project argument, evidence, article-structure, and publication-readiness standards belong in `STYLE.md`.
 - Confirmed audience learning belongs in the governing `AUDIENCE.md`, preserving source, date, scope, and the distinction between reader evidence, positioning, and inference. A piece-specific audience assumption stays with the brief.
 - Recurring editorial failures belong in the relevant review checklist or skill reference.
 - Workflow improvements belong in the workflow or architecture docs.

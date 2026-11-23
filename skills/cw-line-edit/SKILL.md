@@ -9,7 +9,9 @@ description: Revise prose at the sentence and word level while preserving voice,
 
 A deep, rigorous pass for sentence- and word-level issues. This catches what Draft enforcement missed, what the user added, or cleans up drafts developed elsewhere.
 
-Read `../../references/context-contract.md` and load the relevant writer, project, publication, and platform voice sources before editing.
+Read `../../references/context-contract.md` and load the relevant writer, project, publication, and platform context before editing. Then follow `../../references/voice-from-examples.md`: read the gold examples, build a voice read (or reuse the piece's `voice-read.md`), and apply the `VOICE.md` lessons.
+
+The voice read outranks the generic checks below. Where the gold examples consistently use something a check would remove (fragments, a hedge, a long accumulating sentence, a "But" opener), keep it at the examples' rate and edit only the excess.
 
 ## Entry Points
 
@@ -50,7 +52,7 @@ Run `cw-ai-check` in its required order. When source material or earlier human d
 - All patterns in the ai-check lexicon
 
 ### Voice Alignment
-Check the prose against the active writer and project voice sources. Do not make a sentence cleaner by erasing intent, humor, rhythm, priors, or a distinctive aside.
+Check each paragraph against the voice read: openings, construction, length mix, paragraph endings, word choice, punctuation, and the things the examples never do. Run the counter with `--compare` on the full draft and fix features outside the examples' range. Do not make a sentence cleaner by erasing intent, humor, rhythm, priors, or a distinctive aside.
 
 ### Meaning And Provenance
 - Preserve the scope and certainty of factual claims.
@@ -73,7 +75,7 @@ After the revised draft, summarize material changes in order of appearance. Do n
 ## Changes Made
 
 1. **Sentence:** "[Original sentence]"
-   **Problem:** [What was wrong]
+   **Problem:** [What was wrong; for voice changes, the example pattern it departed from]
    **Suggested Fix:** [What was changed]
 
 2. **Sentence:** "[Original sentence]"

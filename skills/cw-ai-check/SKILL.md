@@ -22,6 +22,7 @@ When composed into Draft or Line Edit:
 - Scan generated or revised copy.
 - Repair clear AI tells without narrating the pass.
 - Preserve meaning, provenance, and the active voice context.
+- When the writer's gold examples use a flagged pattern regularly (see `../../references/voice-from-examples.md`), keep it at the examples' rate and remove only the excess.
 - Show the user usable copy only.
 
 ### Manual Cleanup

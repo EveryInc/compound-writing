@@ -15,7 +15,8 @@ Read `../../references/context-contract.md` and inspect the active project's ins
 
 | Learning | Preferred destination |
 |---|---|
-| Syntax, diction, tone, cadence, register, punctuation, verbal tic, or sentence-construction preference | The governing `VOICE.md` |
+| Syntax, diction, tone, cadence, register, punctuation, verbal tic, or sentence-construction correction that the gold examples did not prevent | A dated lesson in the governing `VOICE.md`. If the writer's own writing already shows the right move, offer to add that piece to `examples/` instead |
+| A piece the writer says sounds like them, or no longer does | Add it to, or remove it from, `examples/` (counterexamples go in `examples/negative/`) |
 | Argument, evidence, article structure, substantive standard, audience promise, format, or publication-readiness criterion | The governing `STYLE.md` |
 | Confirmed reader situation, knowledge, interest, want, resistance, or audience research finding | The resolved `AUDIENCE.md`, including a named shared source; retain source, date, and scope |
 | Repeated editorial failure | Relevant guardrail or review reference |
@@ -47,7 +48,7 @@ For audience learning, a piece-specific assumption stays with the assignment. Do
 2. Add or revise the narrowest relevant rule.
 3. Preserve existing user-authored context, examples, and avoid duplicate guidance.
 4. Record the mechanism or consequence, not only a vague preference.
-5. Keep examples fresh and non-copyable when the rule concerns voice.
+5. For a voice lesson, record the date, the piece, the line that went wrong (or a description of it), and the fix. Never write a general description of the voice into `VOICE.md`.
 
 ## Confirm
 

@@ -16,7 +16,7 @@ At the first meaningful Compound Writing interaction, inspect the request, suppl
 - Treat an existing writing workspace, maintained voice or style context, or useful live artifact as a real starting point even when the Compound Writing scaffold is absent.
 - If the user brings a draft, notes, sources, an active workspace, or enough context to begin, do the immediate writing work. Do not block on setup or a calibration interview. Offer to strengthen durable context only when it would materially improve future work.
 - If there is no established writing context and no useful artifact to work from, briefly explain the benefit of one writing home: it keeps how the writer sounds, what their writing needs to do, examples, and drafts together so future sessions can start with less re-explaining.
-- Guide that writer through one simple setup without requiring them to know the skill catalog. Resolve the target folder first, then route to `cw-setup-project` and begin `cw-onboarding` for `VOICE.md` and `STYLE.md`.
+- Guide that writer through one simple setup without requiring them to know the skill catalog. Resolve the target folder first, then route to `cw-setup-project` and begin `cw-onboarding` for gold examples and `STYLE.md`.
 
 Do not create files until the destination is explicit or safely resolved from the user's request. Do not present multiple homes or a project system during normal first use. Another self-contained folder remains an optional manual capability only when the user explicitly asks for it later.
 

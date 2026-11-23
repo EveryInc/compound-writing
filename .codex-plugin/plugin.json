@@ -1,7 +1,7 @@
 {
-  "name": "compound-writing",
-  "version": "2.4.1",
-  "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
+  "name": "compound-writing-gold",
+  "version": "2.4.1-gold.1",
+  "description": "EXPERIMENT: Compound Writing with voice read from the writer's gold examples instead of a written voice description.",
   "author": {
     "name": "Every",
     "email": "katie@every.to",
@@ -23,7 +23,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Compound Writing",
+    "displayName": "Compound Writing (Gold Examples)",
     "shortDescription": "A full writing toolbox with a context-aware front door",
     "longDescription": "Compound Writing provides a full toolbox for developing ideas, drafting, revising, pressure-testing, and preparing work for publication. Scribe acts as the context-aware front door: it helps a first-time writer establish one portable writing home when needed, or starts directly from an existing draft or workspace. The system preserves source provenance, writer voice, and human ownership of consequential decisions. Optional audience context records who you write for, what they know and want, and the evidence behind those observations. A blank template helps you establish your own guide or reuse a maintained shared source.",
     "developerName": "Every",

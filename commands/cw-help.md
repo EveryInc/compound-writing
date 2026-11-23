@@ -9,7 +9,7 @@ Compound Writing loads the context that already governs the work, then routes to
 
 Use `cw-scribe` when you want help starting, continuing, finishing, or improving a piece without choosing a skill first. The full toolbox is installed; `cw-scribe` keeps the user from having to learn it all before beginning.
 
-On a first meaningful interaction, `cw-scribe` checks for a draft, active workspace, and useful writing context. If none exists, it briefly explains one writing home, asks where it should live, creates `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`, and helps begin the first two guides. If useful work is already in front of it, it starts there without making setup a gate.
+On a first meaningful interaction, `cw-scribe` checks for a draft, active workspace, and useful writing context. If none exists, it briefly explains one writing home, asks where it should live, creates `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`, and helps collect gold examples (the source of the voice) and a first `STYLE.md`. If useful work is already in front of it, it starts there without making setup a gate.
 
 You do not need to know the setup or onboarding tools by name. Use `cw-setup-project` directly only when you explicitly want to create or migrate a self-contained writing folder yourself.
 

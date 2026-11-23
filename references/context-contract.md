@@ -9,8 +9,8 @@ Load only the layers that exist and matter to the task, in this order:
 1. Explicit user instructions and supplied material.
 2. Repository or workspace instructions such as `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, or `GEMINI.md`, plus applicable rules supplied by the active host. Respect each rule's scope and activation conditions.
 3. Global identity, preference, rule, and voice files named by those instructions.
-4. The active writing home's or project's `AGENTS.md`, `VOICE.md`, `STYLE.md`, optional `AUDIENCE.md` (including a shared audience guide named by its instructions), brief, template, workflow, or checklist.
-5. Relevant curated examples from the active writing home's or project's `examples/` folder.
+4. The active writing home's or project's `AGENTS.md`, `VOICE.md` (confirmed voice lessons), `STYLE.md`, optional `AUDIENCE.md` (including a shared audience guide named by its instructions), brief, template, workflow, or checklist.
+5. The gold examples in the active writing home's or project's `examples/` folder. They are the source of sentence- and word-level voice: read them by following `voice-from-examples.md` in this folder.
 6. Assignment-specific notes, sources, research, outline, draft, feedback, and destination requirements.
 7. A legacy `TASTE.md`, only when the project still maintains it.
 8. Plugin defaults, only as a fallback for gaps not resolved above.
@@ -38,24 +38,25 @@ Keep the files conceptually separate:
 
 | File | Governing question | Belongs here | Does not belong here |
 |---|---|---|---|
-| `VOICE.md` | How should the sentences sound? | Syntax, diction, and tone, including cadence, rhythm, register, punctuation, and verbal tics | Argument, evidence standards, article structure, substantive requirements, or publication-readiness criteria |
+| `examples/` | How do the writer's sentences actually sound? | Gold pieces by the writer, the source the voice is read from; optional counterexamples in `examples/negative/` | Pieces the writer does not consider representative, or heavily edited by someone else |
+| `VOICE.md` | What has the writer corrected that the examples did not teach? | Dated, confirmed lessons on syntax, diction, and tone, including cadence, register, punctuation, and verbal tics | A general description of the voice, adjectives, patterns already visible in the examples, or argument, evidence, structure, and readiness criteria |
 | `STYLE.md` | What must the article do, contain, and prove? | Argument, evidence, article structure, substantive standards, audience promise, and publication-readiness criteria | Word choice, sentence construction, cadence, or tone |
 | `AUDIENCE.md` | Who are we writing for, and what may engage them? | Reader situations, knowledge, wants, interests, resistance, and evidence or hypotheses about the audience | Sentence sound, article requirements, or a predetermined angle for every piece |
 
 Classify a rule by what it changes:
 
-- If it changes wording, sentence construction, or tone, put it in `VOICE.md`.
+- If it changes wording, sentence construction, or tone, put it in `VOICE.md` as a confirmed lesson, or add a gold example that shows it.
 - If it changes the claim, support, organization, or readiness standard of the article, put it in `STYLE.md`.
 - If it describes the reader's situation, knowledge, interests, wants, or resistance, put it in the governing `AUDIENCE.md` when that durable audience context is useful and authorized.
 - Split feedback that spans these concerns into separate observations or rules; do not duplicate the combined instruction across guides.
 
-When creating or refreshing `VOICE.md` from examples, treat it as a **sentence-level vocal score**. It should describe observable cadence, syntax, diction, register, punctuation, humor, verbal tics, and revision moves. It should not become a personal philosophy, project strategy, or editorial brief.
+This edition does not keep a written description of the voice. The voice is read from the gold examples each time voice-sensitive work starts, following `voice-from-examples.md`. `VOICE.md` holds only lessons on diction and syntax that the writer confirmed after the examples alone did not get a draft right. Lessons override the examples where they conflict.
 
 Project argument, rigor, evidence, structure, and obligations to readers belong in `STYLE.md` or the assignment brief. Knowledge about readers' curiosity, situations, or interests belongs in `AUDIENCE.md` when one is maintained. Sentence-level expression remains in `VOICE.md`.
 
 Examples:
 
-- `VOICE.md`: favor plain verbs; use long accumulating sentences sparingly; avoid a scolding tone.
+- `VOICE.md`: "2026-11-03, newsletter draft: the writer twice replaced *unlock* with a plain verb. Do not use it."
 - `STYLE.md`: state the thesis early; source every consequential claim; earn the ending; do not call a piece publication-ready while the central counterargument is unanswered.
 - `AUDIENCE.md`: readers have used the tool but may not know its evaluation vocabulary; label the source and scope of that observation.
 
@@ -73,15 +74,15 @@ Examples:
 
 ## Applying The Context
 
-- Treat `VOICE.md` as the authority for syntax, diction, and tone.
+- Treat the gold examples, read through `voice-from-examples.md`, as the authority for syntax, diction, and tone. Treat `VOICE.md` lessons as confirmed corrections that win where they conflict with a pattern in the examples.
 - Treat `STYLE.md` as the authority for argument, evidence, article structure, substantive standards, and publication readiness.
 - Use the resolved `AUDIENCE.md` for reader context, with assignment-specific audience instructions taking precedence.
-- Use curated examples to interpret written rules, not as language to imitate.
-- For sample-based voice calibration, record only evidenced, reusable sentence-level patterns; keep a short source cue or observed move with each material rule.
-- Treat a phrase that could be copied from the writer as evidence, not a reusable phrase bank.
+- Learn sentence patterns from the gold examples and match them at the rate they occur. Copy patterns, not sentences.
+- Back every voice pattern you act on with quoted instances from at least two examples; one instance is a note, not a pattern.
+- Where a generic craft rule in a skill conflicts with what the gold examples consistently do, follow the examples.
 - Treat a legacy personal preference file as lower-authority context unless the project explicitly says otherwise.
 - Preserve distinctive syntax, humor, priors, and useful weirdness while tightening.
-- Do not copy illustrative voice-guide examples verbatim.
+- Do not paste sentences from a gold example into new prose as if they were new. The writer's own words in the current material (notes, interview answers, comments, their own draft) are different: use them, verbatim or close, when they work.
 
 ## Sources And Claims
 

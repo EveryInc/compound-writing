@@ -52,13 +52,13 @@ If a shared audience guide already governs the work, reference that guide from p
 
 ## Keep The Split Clear
 
-- `VOICE.md` answers: **How should the sentences sound?** Put syntax, diction, and tone here, including cadence, rhythm, register, punctuation, and verbal tics.
+- `examples/` answers: **How do the sentences sound?** It holds the writer's gold pieces; voice-sensitive skills read the voice from them (see `../../references/voice-from-examples.md`). Counterexamples go in `examples/negative/`.
+- `VOICE.md` answers: **What has the writer corrected that the examples did not teach?** It holds dated lessons on syntax, diction, and tone, never a general description of the voice.
 - `STYLE.md` answers: **What must the article do, contain, and prove?** Put argument, evidence, article structure, substantive standards, audience promise, and publication-readiness criteria here.
 - Optional `AUDIENCE.md` answers: **Who are we writing for, and what may engage them?** Keep reader situations, knowledge, wants, interests, resistance, and their evidence here; use a named shared guide when one exists.
-- `examples/` holds curated positive and negative examples. Examples are evidence for the written rules, not rules by themselves.
 - `drafts/` holds one folder per piece: `drafts/<piece-slug>/`. Keep that piece's notes, research, outline, draft versions, and reviews together.
 
-Never put argument, evidence, structure, or publication-readiness rules in `VOICE.md`. Never put word choice, sentence construction, cadence, or tone rules in `STYLE.md`. Split mixed feedback into separate rules.
+Never put a description of the voice, or argument, evidence, structure, or publication-readiness rules, in `VOICE.md`. Never put word choice, sentence construction, cadence, or tone rules in `STYLE.md`. Split mixed feedback into separate rules.
 
 Do not create `TASTE.md`, `context.md`, `published/`, or `.status.yaml` as part of setup.
 
@@ -67,7 +67,7 @@ Do not create `TASTE.md`, `context.md`, `published/`, or `.status.yaml` as part 
 When `TASTE.md` exists:
 
 1. Read it with the existing project instructions.
-2. Route syntax, diction, and tone rules to `VOICE.md`.
+2. Route concrete syntax, diction, and tone corrections to `VOICE.md` as lessons; offer to replace descriptive voice rules with gold examples.
 3. Route argument, evidence, article structure, substantive standards, and publication-readiness rules to `STYLE.md`.
 4. Route durable reader knowledge to a maintained `AUDIENCE.md` when requested; use an existing shared guide rather than creating a duplicate. Flag mixed or conflicting guidance.
 5. Show the migration summary before changing ambiguous or high-authority guidance.
@@ -75,7 +75,7 @@ When `TASTE.md` exists:
 
 ## Begin The Guides
 
-After first-run setup, begin `cw-onboarding` so the writer can add a useful first version of both guides from a short conversation, existing writing, or the work already in progress. Do not block use of the writing home on completing either profile.
+After first-run setup, begin `cw-onboarding` so the writer can add gold examples and a first version of `STYLE.md` from a short conversation, existing writing, or the work already in progress. Do not block use of the writing home on completing either profile.
 
 When the user invoked `cw-setup-project` manually for an additional folder, offer onboarding rather than assuming they want a new profile immediately.
 

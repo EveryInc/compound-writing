@@ -13,6 +13,8 @@ Turn the available material into usable prose. The goal is a complete draft the 
 
 Read `../../references/context-contract.md`. Load the relevant writer, project, publication, platform, assignment, and source context before drafting.
 
+Before writing any prose, read the writer's gold examples by following `../../references/voice-from-examples.md` and build a voice read. Then read the `VOICE.md` lessons. Draft to the voice read; do not draft first and adjust afterwards.
+
 - Treat maintained voice and project guides as authoritative.
 - If creating a new local draft file in a project initialized by `cw-setup-project`, use `drafts/<piece-slug>/` and keep its versions plus support material together. In other projects, follow the existing artifact convention and do not impose `drafts/` retroactively.
 - Keep factual claims attached to their sources.
@@ -31,21 +33,17 @@ Use judgment about pacing. Some writers want to see each section before moving o
 Produce usable copy that reflects the active context without narrating every rule being applied.
 
 ### Voice
-Apply the maintained writer and project voice guidance. Use plugin defaults only for gaps:
-- Conversational but authoritative
-- Accessible without dumbing down
-- Confident with nuance
-- Intellectually generous
+Write every sentence to the voice read from the gold examples: their openings, construction, length mix, paragraph endings, verbs, register, punctuation, and absences, at the rates the examples show. Apply `VOICE.md` lessons on top.
 
-### Sentence Structure
-Apply the active syntax and diction guidance:
+Before handing off each section, compare it with the examples. When a section runs long, check it with the counter (`--compare`, see the procedure) and bring any feature outside the examples' range back in line.
+
+When no gold examples exist, say so once, draft with the `VOICE.md` lessons and these fallbacks, and label the draft **not calibrated to examples**:
 - Vary sentence length
-- Active voice preferred
 - Concrete nouns and verbs
 - Front-load important information
 
 ### Things to Avoid
-Check the active voice and style files for the writer's specific list. Common fallback checks:
+Avoid what the gold examples never do, plus anything in the `VOICE.md` lessons. Common fallback checks, which yield to the examples where they consistently do otherwise:
 - Hedge words, weasel words
 - Throat-clearing, echo statements
 - Cliché metaphors, empty intensifiers
@@ -99,8 +97,10 @@ Offer the next pass only when it would help. Do not force a full pipeline after 
 
 When invoked programmatically:
 - Accept outline (any depth) as input
+- Build the voice read from the gold examples first, and save it as `voice-read.md` in the piece folder when there is one
 - Apply all silent enforcement
 - Return complete draft
+- Name the gold examples the voice read came from
 - Flag any sections that felt weak or uncertain
 
 ## Lessons

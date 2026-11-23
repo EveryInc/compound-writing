@@ -1,4 +1,6 @@
-# Compound Writing
+# Compound Writing (gold-examples edition)
+
+> **Experimental edition: voice from gold examples.** This fork of Compound Writing 2.4.1 replaces the written voice description in `VOICE.md` with a procedure: before drafting or editing, read the writer's gold examples and extract sentence- and word-level patterns from them (`references/voice-from-examples.md`). `VOICE.md` keeps only confirmed lessons. See `EXPERIMENT.md`. Not for release.
 
 A context-first writing toolbox for developing ideas, drafting, revising, stress-testing, and preparing work for publication without sanding off the writer.
 
@@ -13,7 +15,7 @@ On a first meaningful interaction, Scribe looks for a draft, an active workspace
 The system:
 
 - gives a first-time writer one portable writing home with `VOICE.md`, `STYLE.md`, `examples/`, and `drafts/`;
-- keeps syntax, diction, and tone in `VOICE.md` while routing argument, evidence, article structure, substantive standards, and publication readiness to `STYLE.md`;
+- reads syntax, diction, and tone from the writer's gold examples, keeps confirmed corrections in `VOICE.md`, and routes argument, evidence, article structure, substantive standards, and publication readiness to `STYLE.md`;
 - uses optional `AUDIENCE.md` for reader situations, knowledge, wants, interests, and resistance, including one shared source across publications;
 - preserves existing workspaces and active drafts rather than imposing the scaffold retroactively;
 - follows repository, global, project, assignment, and voice context in authority order;
@@ -44,11 +46,11 @@ writing-home/
     └── piece-slug/
 ```
 
-`VOICE.md` answers how the sentences should sound: syntax, diction, and tone. `STYLE.md` answers what the writing must do, contain, and prove: argument, evidence, article structure, substantive standards, and publication readiness. `examples/` holds curated evidence for those rules. `drafts/` keeps each piece's notes, research, outline, versions, and reviews together.
+`examples/` holds the writer's gold pieces, and the voice is read from them each time voice-sensitive work starts. `VOICE.md` holds confirmed lessons on syntax, diction, and tone that the examples did not teach. `STYLE.md` answers what the writing must do, contain, and prove: argument, evidence, article structure, substantive standards, and publication readiness. `drafts/` keeps each piece's notes, research, outline, versions, and reviews together.
 
 `AUDIENCE.md` answers who the readers are and what may engage them. It records situations, prior knowledge, interests, resistance, and the evidence behind those observations. Several publications can name the same shared audience guide in their instructions; a piece's explicit audience takes precedence. The release includes a [blank audience template](defaults/project-template/AUDIENCE.md) with recommended categories and prompts; it contains no publication or personal reader profile. The file is optional and its absence never blocks writing. During requested setup, `--with-audience` adds the template when a shared source is not already in use.
 
-A rule that changes wording, sentence construction, or tone goes in `VOICE.md`. A rule that changes the claim, support, organization, or readiness standard goes in `STYLE.md`. Reader knowledge belongs in the governing audience guide; the writing's promises remain in `STYLE.md`. Split mixed guidance without duplicating it across files.
+A rule that changes wording, sentence construction, or tone is shown by a gold example or saved as a lesson in `VOICE.md`. A rule that changes the claim, support, organization, or readiness standard goes in `STYLE.md`. Reader knowledge belongs in the governing audience guide; the writing's promises remain in `STYLE.md`. Split mixed guidance without duplicating it across files.
 
 The setup workflow never creates the writing home inside the plugin or overwrites an existing file. It resolves the target first. Existing workspaces keep their own conventions unless the user explicitly asks to add or migrate the scaffold.
 

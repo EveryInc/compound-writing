@@ -9,42 +9,50 @@ Evaluate the passage against the voice context that actually governs the assignm
 
 ## Load Voice Context
 
-Read `../../references/context-contract.md`, then load the relevant maintained voice and style sources it identifies.
+Read `../../references/context-contract.md`, then follow `../../references/voice-from-examples.md` to read the writer's gold examples and build a voice read before judging the passage.
 
 Use this authority order for voice work:
 
 1. Explicit instructions for the current passage.
-2. The active writer and project `VOICE.md` files.
-3. Project, publication, column, or platform `STYLE.md` and more specific guides.
-4. Relevant curated examples from the active project's `examples/` folder.
+2. The `VOICE.md` lessons that govern the writer and project (confirmed corrections).
+3. The gold examples in the active project's `examples/` folder, read through the voice read. More specific examples (a publication's or format's) beat the writer's general set.
+4. Project, publication, column, or platform `STYLE.md` and more specific guides, for anything they say about the format.
 5. Legacy `TASTE.md`, only when the project still maintains it.
-6. Plugin defaults only for unresolved gaps.
+6. Plugin defaults only when no gold examples exist, and say so.
 
-Name the sources used in the assessment. Do not treat plugin defaults as the writer's identity.
+Name the examples and lessons used. Do not treat plugin defaults as the writer's identity.
+
+Run the counter with `--compare` on the passage when it is long enough to measure (a few hundred words or more): `scripts/voice_stats.py` in this skill's folder.
 
 ## Diagnose
 
-Check for:
+Compare the passage with the gold examples, not with a description of them. For each item, quote the passage and a matching or contrasting line from an example. Check for:
 
+- sentence openings, construction, length mix, and where short sentences land;
+- paragraph cadence and how paragraphs end;
+- features the counter puts outside the examples' range;
+- things the passage does that the examples never do;
 - sentence architecture and cadence;
 - diction and register;
 - specificity, scenes, examples, and stakes;
 - humor, vulnerability, priors, and distinctive asides;
 - publication or platform fit;
 - smoothing, generic symmetry, scaffolding, and other AI residue;
-- phrases copied too closely from illustrative voice-guide examples.
+- sentences lifted from a gold example rather than written to its patterns.
 
 Preserve intentional rule-breaking when it carries the writer's point of view.
-Treat examples as evidence for voice rules, not a corpus to imitate.
+Match the examples' patterns, not their sentences or subject matter.
 
 ## Output
 
 Provide:
 
-1. **Voice sources used** — the live files or supplied instructions.
-2. **Aligned** — the strongest specific matches.
-3. **Drift** — the few highest-impact mismatches, quoted precisely.
+1. **Voice sources used** — the gold examples read, the lessons applied, and any supplied instructions.
+2. **Aligned** — the strongest specific matches, each beside the example line it matches.
+3. **Drift** — the few highest-impact mismatches, quoted precisely, each beside the example pattern it departs from, with counter figures where they help.
 4. **Closer revision** — a usable rewrite that preserves meaning and authorship.
 5. **Judgment call** — any tension between writer voice and publication/platform constraints.
 
-Do not turn the result into a generic style checklist. The test is whether this piece sounds like this writer in this context.
+Do not turn the result into a generic style checklist. The test is whether this piece sounds like the writer's gold examples in this context.
+
+If a drift recurs and the examples do not show the right move, suggest saving it as a lesson with `cw-save`, or adding an example that shows it.

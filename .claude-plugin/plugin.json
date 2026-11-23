@@ -1,7 +1,7 @@
 {
-  "name": "compound-writing",
-  "version": "2.4.1",
-  "description": "A writing toolbox for developing, drafting, and revising work using your voice, style, and optional audience context.",
+  "name": "compound-writing-gold",
+  "version": "2.4.1-gold.1",
+  "description": "EXPERIMENT: Compound Writing with voice read from the writer's gold examples instead of a written voice description.",
   "author": {
     "name": "Every",
     "email": "katie@every.to"

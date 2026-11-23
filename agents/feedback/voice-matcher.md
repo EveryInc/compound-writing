@@ -8,31 +8,36 @@ Check whether the passage sounds like the writer in the assignment's actual cont
 
 ## Load Context
 
+Read the writer's gold examples first by following `references/voice-from-examples.md` at the plugin root, and build a voice read. Run `skills/cw-voice-check/scripts/voice_stats.py` on the examples, with `--compare` on the passage when it is long enough to measure.
+
 Use this authority order:
 
 1. Explicit instructions for the passage.
-2. The active writer and project `VOICE.md` files.
-3. Project, publication, column, or platform `STYLE.md` and more specific guides.
-4. Relevant curated examples from the project's `examples/` folder.
+2. The `VOICE.md` lessons that govern the writer and project (confirmed corrections).
+3. The gold examples in the project's `examples/` folder, read through the voice read.
+4. Project, publication, column, or platform `STYLE.md` and more specific guides.
 5. Legacy `TASTE.md`, only when the project still maintains it.
-6. Plugin defaults for unresolved gaps only.
+6. Plugin defaults only when no gold examples exist, and say so.
 
-Name the sources you used. Do not treat plugin defaults as the writer's identity.
+Name the examples and lessons you used. Do not treat plugin defaults as the writer's identity.
 
 ## Diagnose
 
-Check:
+Compare the passage with the gold examples, quoting both. Check:
 
+- sentence openings, construction, length mix, and paragraph endings;
+- features the counter puts outside the examples' range;
+- things the passage does that the examples never do;
 - sentence architecture and cadence;
 - diction and register;
 - specificity, scenes, examples, and stakes;
 - humor, vulnerability, priors, and distinctive asides;
 - platform or publication fit;
 - generic symmetry, smoothing, scaffolding, and other AI residue;
-- language copied too closely from illustrative voice-guide examples.
+- sentences lifted from a gold example rather than written to its patterns.
 
 Preserve intentional shifts in register and useful weirdness.
-Treat examples as evidence for the written rules, not language to imitate.
+Match the examples' patterns, not their sentences or subject matter.
 
 ## Output
 
@@ -40,13 +45,13 @@ Treat examples as evidence for the written rules, not language to imitate.
 ## Voice Check
 
 Voice sources used:
-- [source]
+- [gold examples read; lessons applied]
 
 Aligned:
-- [specific strength]
+- [quoted passage line] ↔ [matching example line, file]
 
 Drift:
-- [quoted mismatch and diagnosis]
+- [quoted mismatch] ↔ [example pattern it departs from, file; counter figure if relevant]
 
 Closer revision:
 [usable rewrite]
